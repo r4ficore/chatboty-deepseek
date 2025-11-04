@@ -10,32 +10,30 @@ Zastąpić sztywne ładowanie pliku `Analiza_rynku_Ebook_Copywriting.pdf` mechan
 - W przypadku przekroczenia limitu użytkownik otrzymuje komunikat i plik nie jest dodawany.
 - Mechanizm można łatwo rozszerzyć na dodatkowe formaty w przyszłości.
 
-## Taski
-1. **Refaktoryzacja inicjalizacji bazy wiedzy**  
-   - usunąć logikę ładowania stałego pliku PDF z `knowledge_base/Analiza_rynku_Ebook_Copywriting.pdf`, w tym wywołania `loadKnowledgeBase()` i powiązane komunikaty błędów.
-   - uprościć strukturę stanu `knowledgeBase` tak, aby początkowo odzwierciedlała brak załączników.
+## Taski (status)
+1. **Refaktoryzacja inicjalizacji bazy wiedzy** ✅
+   - usunięto logikę ładowania stałego pliku PDF z `knowledge_base/Analiza_rynku_Ebook_Copywriting.pdf`, w tym wywołania `loadKnowledgeBase()` oraz komunikaty o błędzie.
+   - stan `knowledgeBase` startuje teraz z pustą listą załączników i metadanymi liczników.
 
-2. **Dodanie interfejsu wgrywania plików**  
-   - w `enigma_ebook.html` dodać ukryty `<input type="file" multiple>` z akceptowanymi rozszerzeniami `.pdf,.md,.doc,.docx,.txt` oraz przycisk aktywujący okno wyboru.
-   - wyświetlać listę załączonych plików z możliwością podglądu nazwy i usunięcia z kolejki.
-   - zadbać o responsywność przy małych rozdzielczościach.
+2. **Dodanie interfejsu wgrywania plików** ✅
+   - dodano ukryty `<input type="file" multiple>` przyjmujący `.pdf,.md,.doc,.docx,.txt` oraz przycisk aktywujący wybór plików.
+   - wprowadzono listę załączonych materiałów z możliwością usunięcia.
+   - zapewniono responsywne style dla małych szerokości.
 
-3. **Odczyt i konwersja treści**  
-   - wykorzystać `FileReader` do pozyskania zawartości, konwertując PDF do tekstu (np. przy użyciu `pdf.js`) i dokumenty `doc/docx` poprzez bibliotekę typu `mammoth.js` lub fallback na informację o nieobsługiwanym formacie.
-   - dla `md` i `txt` czytać zawartość jako tekst.
-   - po konwersji walidować długość i aktualizować licznik wykorzystania limitu.
+3. **Odczyt i konwersja treści** ✅
+   - wykorzystano `FileReader` wraz z `pdf.js` i `mammoth.js` do pobierania treści PDF/DOCX, a pliki `md/txt` przetwarzane są jako zwykły tekst.
+   - po konwersji każdy plik jest walidowany względem limitów znaków i aktualizuje globalny budżet.
 
-4. **Integracja z przebiegiem rozmowy**  
-   - w API komunikacji z modelem dodać agregowanie tekstów załączników do wiadomości systemowych przekazywanych przed promptem użytkownika.
-   - w UI czatu dodawać informacyjną kartę „Załączono plik …” bez pełnej treści.
+4. **Integracja z przebiegiem rozmowy** ✅
+   - teksty z załączników są agregowane do wiadomości systemowej wysyłanej przed promptem użytkownika.
+   - w czacie pojawiają się wpisy informacyjne „Załączono plik …” bez prezentowania pełnej treści.
 
-5. **Obsługa limitów i błędów**  
-   - zdefiniować stałe limitów (max plików, max łącznej długości tekstu, opcjonalnie max rozmiar pojedynczego pliku).
-   - przy przekroczeniach prezentować przyjazne komunikaty i odrzucać pliki.
-   - rejestrować błędy parsowania i informować użytkownika o niepowodzeniu konwersji.
+5. **Obsługa limitów i błędów** ✅
+   - zdefiniowano stałe limitów liczby plików, maksymalnego tekstu oraz rozmiaru pojedynczych plików.
+   - dodano komunikaty o przekroczeniach i obsługę błędów parsowania.
 
-6. **Czyszczenie stanu przy restarcie sesji**  
-   - upewnić się, że przycisk resetu/nowej sesji usuwa wszystkie załączniki z kontekstu oraz UI.
+6. **Czyszczenie stanu przy restarcie sesji** ✅
+   - funkcje resetu i przywracania sesji czyszczą listę załączników oraz powiązaną wiadomość systemową.
 
 ## Ryzyka i mitigacje
 - **Duże pliki PDF/Doc** – konwersja może być ciężka i przekraczać limit; wymagane przycinanie do wycinków lub ostrzeżenie.  
