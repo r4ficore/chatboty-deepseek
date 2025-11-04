@@ -60,6 +60,22 @@ try {
         json_out(['ok'=>true, 'url'=>$url]);
     }
 
+    if ($action === 'delete') {
+        $sessionId = sanitize_id((string)($input['sessionId'] ?? ''));
+        $filename  = sanitize_filename($input['filename'] ?? '');
+        if (!$sessionId || !$filename) json_out(['ok'=>false,'error'=>'Invalid sessionId/filename'], 400);
+
+        $dir = $BASE_DIR . '/' . $sessionId;
+        if (!is_dir($dir)) json_out(['ok'=>true, 'deleted'=>false]);
+
+        $path = $dir . '/' . $filename;
+        if (!is_file($path)) json_out(['ok'=>true, 'deleted'=>false]);
+
+        if (!@unlink($path)) json_out(['ok'=>false,'error'=>'Delete failed'], 500);
+
+        json_out(['ok'=>true, 'deleted'=>true]);
+    }
+
     if ($action === 'combine') {
         $sessionId = sanitize_id((string)($input['sessionId'] ?? ''));
         if (!$sessionId) json_out(['ok'=>false,'error'=>'Invalid sessionId'], 400);

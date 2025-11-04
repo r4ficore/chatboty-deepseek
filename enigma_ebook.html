@@ -137,7 +137,59 @@
       display: inline-block; transition: background-color 0.2s ease;
     }
     .final-download a:hover { background: #e5c58c; }
+
+    /* Panel zarządzania zaakceptowanymi rozdziałami */
+    .chapter-management {
+      display: none;
+      padding: 16px 24px 0 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(12,12,12,0.85);
+    }
+    .chapter-management.has-items { display: block; }
+    .chapter-management-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px; margin-bottom: 8px;
+    }
+    .chapter-management-header h3 {
+      margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #d6b376;
+    }
+    .chapter-management-header span {
+      font-size: 0.7rem; color: #9ca3af;
+    }
+    #accepted-chapters-list {
+      list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px;
+    }
+    .accepted-chapter-item {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; background: rgba(24,24,24,0.85);
+    }
+    .accepted-chapter-label {
+      font-size: 0.78rem; font-weight: 500; color: #f3f4f6;
+    }
+    .accepted-chapter-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .accepted-chapter-actions button {
+      background: #1f1f22; border: 1px solid rgba(255,255,255,0.12);
+      color: #f6f6f6; padding: 4px 8px; border-radius: 8px; font-size: 0.7rem;
+      cursor: pointer; transition: background 0.2s ease;
+    }
+    .accepted-chapter-actions button:hover { background: #2a2a2e; }
+    .accepted-chapter-actions .danger { border-color: #e26a6a; color: #ffb6b6; }
+
+    /* Bloki reasoning */
+    .file-block.reasoning .file-block-header {
+      background: rgba(214,179,118,0.12);
+    }
+    .file-block.reasoning .file-name {
+      color: #fef3c7;
+    }
+    .reasoning-title {
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #fef3c7; margin: 14px 2px 6px 2px;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
   <div class="chat-container">
@@ -151,6 +203,14 @@
           <a href="#" id="history-btn">Historia czatów</a>
         </div>
       </div>
+    </div>
+
+    <div id="chapter-management" class="chapter-management">
+      <div class="chapter-management-header">
+        <h3>Zaakceptowane rozdziały</h3>
+        <span>Zarządzaj zapisanymi treściami lub poproś o ich poprawę.</span>
+      </div>
+      <ul id="accepted-chapters-list"></ul>
     </div>
 
     <div id="chat-messages" class="chat-messages"></div>
@@ -178,6 +238,10 @@
     /* =========================
        KONFIG & STAN SESJI
     ==========================*/
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
+    }
+
     const chatMessages = document.getElementById('chat-messages');
     const userInput    = document.getElementById('user-input');
     const sendBtn      = document.getElementById('send-btn');
@@ -190,17 +254,37 @@
     const historyModal = document.getElementById('history-modal');
     const closeHistoryBtn = document.getElementById('close-history');
     const historyList  = document.getElementById('history-list');
+    const chapterManagement = document.getElementById('chapter-management');
+    const acceptedChaptersList = document.getElementById('accepted-chapters-list');
 
     let currentChatId = null;
 
+    function generateSessionId() {
+      return `ebook_${Math.random().toString(36).slice(2,8)}_${Date.now()}`;
+    }
+
     // Unikalny identyfikator sesji do zapisu plików na serwerze
     const ebookState = {
-      sessionId: `ebook_${Math.random().toString(36).slice(2,8)}_${Date.now()}`,
+      sessionId: generateSessionId(),
       stage: 'intro',           // intro -> meta -> toc -> chapters -> final
       currentChapter: 0,
       totalChapters: null,
       lastGenerated: null,      // { type: 'chapter', filename, content, chapterIndex }
-      accepted: []              // [{filename, chapterIndex}]
+      accepted: [],             // [{filename, chapterIndex}]
+      tocContent: '',
+      tocEntries: [],
+      reasoningSummaries: {},   // { [chapterIndex]: summary }
+      lastReasoningGenerated: null
+    };
+
+    const knowledgeBase = {
+      url: 'knowledge_base/Analiza_rynku_Ebook_Copywriting.pdf',
+      status: 'idle',
+      loadPromise: null,
+      text: '',
+      excerpt: '',
+      lastError: null,
+      notified: false
     };
 
     // Pełny kontekst rozmowy (dla API)
@@ -213,7 +297,7 @@ Zasady KRYTYCZNE:
 • Nigdy nie wypisuj pełnych rozdziałów w czacie. Zamiast tego zawsze zwracaj treść jako blok pliku.
 • Format pliku: <FILE name="NAZWA.txt">...treść...</FILE>
 • Poza blokami pliku podawaj TYLKO krótki status (2–5 zdań) i kolejną akcję (np. „Akceptuj / Popraw / Dalej”).
-• Zachowuj pełny kontekst całego eBooka między rozdziałami.
+• Zachowuj pełny kontekst całego eBooka między rozdziałami i korzystaj z przekazywanych podsumowań reasoning.
 
 Proces:
 1) Zbierz: temat, grupa docelowa, styl, oczekiwana długość (liczba rozdziałów i ~długość rozdziału).
@@ -230,8 +314,310 @@ Proces:
 5) Po zaakceptowaniu wszystkich – nie wypisuj treści w czacie:
    backend scali rozdziały do ebook_final.txt.
 
+Dodatkowe wymogi reasoning:
+• Każdy rozdział musi zostać wygenerowany RAZEM z plikiem reasoning_NN.txt.
+• Plik reasoning_NN.txt zawiera sekcje: „Koncepcja eBooka”, „Streszczenie bieżącego rozdziału”, „Powiązanie z poprzednim rozdziałem”, „Zapowiedź kolejnego rozdziału (wg spisu treści)”.
+• Treść rozdziału w pliku rozdział_NN.txt to wyłącznie finalny materiał eBooka (bez meta-komentarzy).
+
 Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdziałami.`
     };
+
+    function splitParagraphs(text) {
+      return (text || '')
+        .split(/\n{2,}/)
+        .map(p => p.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+    }
+
+    function buildExcerptFromParagraphs(paragraphs, maxChars = 3600) {
+      const selected = [];
+      let total = 0;
+      for (const p of paragraphs) {
+        if (!p) continue;
+        selected.push(p);
+        total += p.length + 2;
+        if (total >= maxChars) break;
+      }
+      return selected.join('\n\n').slice(0, maxChars);
+    }
+
+    function deriveKnowledgeQuery({ userText = '', explicitQuery = '' }) {
+      if (explicitQuery) return explicitQuery;
+      const lower = userText.toLowerCase();
+      if (ebookState.stage === 'chapters') {
+        const idx = ebookState.currentChapter || ebookState.lastGenerated?.chapterIndex || 1;
+        const entry = getTocEntry(idx);
+        if (entry) {
+          return `${entry.title} ${entry.description || ''}`.trim();
+        }
+      }
+      if (ebookState.stage === 'toc' || lower.includes('spis treści')) {
+        return 'spis treści ebook marketing copywriting';
+      }
+      if (lower.includes('tytuł')) {
+        return 'tytuł ebook marketingowy strategia';
+      }
+      return 'ebook marketing copywriting analiza rynku automatyzacja lejki';
+    }
+
+    function selectKnowledgeSnippets(query, maxChars = 3600) {
+      if (!knowledgeBase.text) return '';
+      const paragraphs = splitParagraphs(knowledgeBase.text);
+      if (!paragraphs.length) return '';
+
+      const terms = Array.from(new Set((query || '')
+        .toLowerCase()
+        .split(/[^a-ząćęłńóśźż0-9]+/i)
+        .filter(token => token && token.length > 3)));
+
+      if (!terms.length) {
+        return buildExcerptFromParagraphs(paragraphs, maxChars);
+      }
+
+      const scored = paragraphs.map((p, idx) => {
+        const lower = p.toLowerCase();
+        let score = 0;
+        for (const term of terms) {
+          if (lower.includes(term)) score += 2;
+          if (lower.startsWith(term)) score += 1;
+        }
+        return { p, score, idx };
+      });
+
+      scored.sort((a, b) => {
+        if (b.score === a.score) return a.idx - b.idx;
+        return b.score - a.score;
+      });
+
+      const selected = [];
+      let total = 0;
+      for (const item of scored) {
+        if (!item.p) continue;
+        if (item.score <= 0 && selected.length) break;
+        selected.push(item.p);
+        total += item.p.length + 2;
+        if (total >= maxChars) break;
+      }
+
+      if (!selected.length) {
+        return buildExcerptFromParagraphs(paragraphs, maxChars);
+      }
+
+      const snippet = selected.join('\n\n');
+      return snippet.length > maxChars ? snippet.slice(0, maxChars) : snippet;
+    }
+
+    function buildKnowledgeMessage({ query, stage }) {
+      if (!knowledgeBase.text) return '';
+      const snippet = selectKnowledgeSnippets(query, 3400);
+      if (!snippet) return '';
+      const stageHint = stage === 'chapters'
+        ? 'Przygotowując kolejny rozdział'
+        : stage === 'toc'
+          ? 'Tworząc spis treści lub sekcję meta'
+          : 'Tworząc zawartość eBooka';
+
+      return `${stageHint} korzystaj z materiału referencyjnego "Analiza_rynku_Ebook_Copywriting.pdf". Kluczowe fragmenty:\n${snippet}\n\nWłącz powyższe dane do treści własnymi słowami, zachowując spójność ze spisem treści i koncepcją ebooka.`;
+    }
+
+    async function loadKnowledgeBase() {
+      if (!window.pdfjsLib) {
+        knowledgeBase.status = 'error';
+        knowledgeBase.lastError = new Error('Brak biblioteki pdf.js');
+        throw knowledgeBase.lastError;
+      }
+      if (knowledgeBase.status === 'loaded') {
+        return knowledgeBase;
+      }
+      if (knowledgeBase.status === 'loading' && knowledgeBase.loadPromise) {
+        await knowledgeBase.loadPromise;
+        return knowledgeBase;
+      }
+
+      knowledgeBase.status = 'loading';
+      knowledgeBase.loadPromise = (async () => {
+        const loadingTask = pdfjsLib.getDocument({ url: knowledgeBase.url });
+        const pdfDoc = await loadingTask.promise;
+        const chunks = [];
+
+        for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
+          const page = await pdfDoc.getPage(pageNumber);
+          const content = await page.getTextContent();
+          const pageText = content.items
+            .map(item => (item.str || ''))
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (pageText) {
+            chunks.push(pageText);
+          }
+        }
+
+        knowledgeBase.text = chunks.join('\n\n');
+        knowledgeBase.excerpt = buildExcerptFromParagraphs(splitParagraphs(knowledgeBase.text), 3400);
+        knowledgeBase.status = 'loaded';
+        knowledgeBase.lastError = null;
+      })().catch(err => {
+        knowledgeBase.status = 'error';
+        knowledgeBase.lastError = err;
+        throw err;
+      }).finally(() => {
+        knowledgeBase.loadPromise = null;
+      });
+
+      await knowledgeBase.loadPromise;
+      return knowledgeBase;
+    }
+
+    function resetEbookState({ newSession = false } = {}) {
+      if (newSession) {
+        ebookState.sessionId = generateSessionId();
+      }
+      ebookState.stage = 'intro';
+      ebookState.currentChapter = 0;
+      ebookState.totalChapters = null;
+      ebookState.lastGenerated = null;
+      ebookState.accepted = [];
+      ebookState.tocContent = '';
+      ebookState.tocEntries = [];
+      ebookState.reasoningSummaries = {};
+      ebookState.lastReasoningGenerated = null;
+      renderAcceptedChapters();
+    }
+
+    function parseTOCEntries(content) {
+      if (!content) return [];
+      const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const entries = [];
+      const re = /^(\d+)[\)\.]?\s*(.*)$/;
+      for (const line of lines) {
+        if (!re.test(line)) continue;
+        const [, numStr, restRaw] = line.match(re);
+        const index = parseInt(numStr, 10);
+        if (!Number.isFinite(index)) continue;
+        let title = restRaw.trim();
+        let description = '';
+        const dashIdx = title.indexOf(' - ');
+        const colonIdx = title.indexOf(': ');
+        let splitIdx = -1;
+        if (dashIdx !== -1) splitIdx = dashIdx;
+        else if (colonIdx !== -1) splitIdx = colonIdx;
+        if (splitIdx !== -1) {
+          description = title.slice(splitIdx + 3).trim();
+          title = title.slice(0, splitIdx).trim();
+        }
+        entries.push({ index, title, description });
+      }
+      return entries;
+    }
+
+    function getTocEntry(idx) {
+      return ebookState.tocEntries.find(e => e.index === idx) || null;
+    }
+
+    function buildChapterLabel(idx) {
+      const entry = getTocEntry(idx);
+      const base = `Rozdział ${String(idx).padStart(2, '0')}`;
+      if (!entry) return base;
+      const details = entry.description ? `${entry.title} — ${entry.description}` : entry.title;
+      return `${base}: ${details}`;
+    }
+
+    function renderAcceptedChapters() {
+      acceptedChaptersList.innerHTML = '';
+      const items = [...ebookState.accepted].sort((a, b) => a.chapterIndex - b.chapterIndex);
+      if (!items.length) {
+        chapterManagement.classList.remove('has-items');
+        return;
+      }
+      chapterManagement.classList.add('has-items');
+      for (const item of items) {
+        const li = document.createElement('li');
+        li.className = 'accepted-chapter-item';
+
+        const label = document.createElement('div');
+        label.className = 'accepted-chapter-label';
+        label.textContent = buildChapterLabel(item.chapterIndex);
+
+        const actions = document.createElement('div');
+        actions.className = 'accepted-chapter-actions';
+
+        const rewriteBtn = document.createElement('button');
+        rewriteBtn.textContent = '🔁 Nadpisz';
+        rewriteBtn.addEventListener('click', () => requestChapterRewriteFlow(item.chapterIndex));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️ Usuń';
+        deleteBtn.classList.add('danger');
+        deleteBtn.addEventListener('click', () => handleChapterDeleteFlow(item.chapterIndex));
+
+        actions.appendChild(rewriteBtn);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(label);
+        li.appendChild(actions);
+
+        acceptedChaptersList.appendChild(li);
+      }
+    }
+
+    async function deleteFileOnServer(filename) {
+      const res = await fetch('combine_ebooks.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          sessionId: ebookState.sessionId,
+          filename
+        })
+      });
+      if (!res.ok) throw new Error(`Delete HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Nieznany błąd usuwania');
+      return data;
+    }
+
+    async function deleteChapterAssets(idx, { silent = false } = {}) {
+      const n = String(idx).padStart(2, '0');
+      const targets = [`rozdzial_${n}.txt`, `reasoning_${n}.txt`];
+      for (const file of targets) {
+        try {
+          await deleteFileOnServer(file);
+        } catch (err) {
+          if (!silent) {
+            addChatMessage(`❌ Nie udało się usunąć pliku ${file}: ${err.message}`, false);
+          }
+        }
+      }
+      ebookState.accepted = ebookState.accepted.filter(item => item.chapterIndex !== idx);
+      delete ebookState.reasoningSummaries[idx];
+      if (ebookState.lastGenerated?.chapterIndex === idx) {
+        ebookState.lastGenerated = null;
+      }
+      if (ebookState.lastReasoningGenerated?.chapterIndex === idx) {
+        ebookState.lastReasoningGenerated = null;
+      }
+      if (ebookState.currentChapter >= idx) {
+        ebookState.currentChapter = idx;
+      }
+      renderAcceptedChapters();
+    }
+
+    async function requestChapterRewriteFlow(idx) {
+      const notes = prompt(`Jakie poprawki wprowadzić w rozdziale ${idx}?`);
+      if (notes === null) return;
+      await deleteChapterAssets(idx, { silent: true });
+      addChatMessage(`Nadpisuję rozdział ${idx}. Generuję nową wersję na podstawie Twoich wskazówek…`, false);
+      ebookState.stage = 'chapters';
+      ebookState.currentChapter = idx;
+      await requestChapter(idx, `Zastąp poprzednią wersję rozdziału ${idx}. Uwzględnij poprawki użytkownika: ${notes}`);
+    }
+
+    async function handleChapterDeleteFlow(idx) {
+      if (!confirm(`Czy na pewno usunąć rozdział ${idx}?`)) return;
+      await deleteChapterAssets(idx);
+      addChatMessage(`Rozdział ${idx} został usunięty. Możesz poprosić o przygotowanie nowej wersji w dowolnym momencie.`, false);
+    }
 
     /* =========================
        UI — DROBNE POMOCNICZE
@@ -272,6 +658,11 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       currentChatId = `chat_${Date.now()}`;
       conversationContext.fullHistory = [];
       chatMessages.innerHTML = '';
+      resetEbookState({ newSession: true });
+
+      if (knowledgeBase.status === 'idle') {
+        loadKnowledgeBase().catch(err => console.warn('Knowledge base prefetch failed', err));
+      }
 
       addChatMessage(
         `<strong>Witaj! Tu Enigma E‑Book Builder.</strong>
@@ -327,10 +718,12 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
     function makePreviewBlock(name, content, opts = {}){
       const id = `pv_${Math.random().toString(36).slice(2,8)}_${Date.now()}`;
       const downloadHtml = opts.downloadHtml || '';
+      const variantClass = opts.variant ? ` ${opts.variant}` : '';
+      const iconHtml = opts.iconHtml || '<i class="fa-regular fa-file-lines" style="color:#d6b376;"></i>';
       return `
-        <div class="file-block" data-pv-id="${id}">
+        <div class="file-block${variantClass}" data-pv-id="${id}">
           <div class="file-block-header">
-            <div class="file-name"><i class="fa-regular fa-file-lines" style="color:#d6b376;"></i>${escapeHtml(name)}</div>
+            <div class="file-name">${iconHtml}${escapeHtml(name)}</div>
             <div class="file-actions">
               <button class="btn-toggle-preview" data-pv-target="${id}">Podgląd</button>
               <button class="btn-copy-text" data-pv-target="${id}">Kopiuj</button>
@@ -473,8 +866,43 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       parentMessageEl.appendChild(bar);
     }
 
-    async function sendToDeepSeekAI(userText) {
+    async function sendToDeepSeekAI(userText, options = {}) {
       showTypingIndicator();
+
+      ebookState.lastReasoningGenerated = null;
+
+      const opts = options || {};
+      const lowerUserText = (userText || '').toLowerCase();
+      const shouldAttachKnowledge = !!(opts.forceKnowledge
+        || opts.knowledgeQuery
+        || ebookState.stage === 'chapters'
+        || ebookState.stage === 'toc'
+        || lowerUserText.includes('spis treści')
+        || lowerUserText.includes('rozdział')
+        || lowerUserText.includes('ebook'));
+
+      let knowledgeSystemMessage = '';
+      if (shouldAttachKnowledge) {
+        try {
+          await loadKnowledgeBase();
+          if (knowledgeBase.status === 'loaded' && knowledgeBase.text) {
+            const query = deriveKnowledgeQuery({
+              userText: lowerUserText,
+              explicitQuery: opts.knowledgeQuery || ''
+            });
+            knowledgeSystemMessage = buildKnowledgeMessage({
+              query,
+              stage: ebookState.stage
+            });
+          }
+        } catch (kbErr) {
+          console.error('Knowledge base load failed', kbErr);
+          if (!knowledgeBase.notified) {
+            addChatMessage('⚠️ Nie udało się załadować materiału referencyjnego Analiza_rynku_Ebook_Copywriting.pdf. Kontynuuję bez niego.', false);
+            knowledgeBase.notified = true;
+          }
+        }
+      }
 
       // zbuduj pełne messages dla DeepSeek API
       const apiHistory = conversationContext.fullHistory.map(m => ({ role: m.role, content: m.content }));
@@ -491,6 +919,10 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
         ...apiHistory,
         { role: "user", content: userText }
       ];
+
+      if (knowledgeSystemMessage) {
+        messages.splice(1, 0, { role: 'system', content: knowledgeSystemMessage });
+      }
 
       try {
         const data = await callDeepSeek(messages);
@@ -510,19 +942,41 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
         let html = statusText.replace(/\n/g,'<br>');
         const wrap = addChatMessage(html, false);
 
-        // Podglądy + szybkie pobrania (TYLKO rozdziały i spis treści)
+        // Podglądy + szybkie pobrania
         let renderedFilesHtml = '';
+        let reasoningBlocksHtml = '';
         for (const f of files) {
-          // Pomijamy pliki reasoning - nie są potrzebne użytkownikowi
-          if (f.name.includes('reasoning')) continue;
-          
           const dl = makeDownloadLink(f.name, f.content);
+          if (/^reasoning_\d+\.txt$/i.test(f.name)) {
+            const match = f.name.match(/(\d+)/);
+            const idx = match ? parseInt(match[1], 10) : null;
+            if (idx) {
+              ebookState.reasoningSummaries[idx] = f.content;
+              ebookState.lastReasoningGenerated = {
+                filename: f.name,
+                content: f.content,
+                chapterIndex: idx
+              };
+            }
+            reasoningBlocksHtml += makePreviewBlock(f.name, f.content, {
+              downloadHtml: dl,
+              variant: ' reasoning',
+              iconHtml: '<i class="fa-solid fa-brain" style="color:#fef08a;"></i>'
+            });
+            continue;
+          }
+
           renderedFilesHtml += makePreviewBlock(f.name, f.content, { downloadHtml: dl });
         }
         if (renderedFilesHtml) {
           const filesWrap = document.createElement('div');
           filesWrap.innerHTML = renderedFilesHtml;
           wrap.appendChild(filesWrap);
+        }
+        if (reasoningBlocksHtml) {
+          const reasoningWrap = document.createElement('div');
+          reasoningWrap.innerHTML = `<div class="reasoning-title">Reasoning / pamięć rozdziału</div>${reasoningBlocksHtml}`;
+          wrap.appendChild(reasoningWrap);
         }
 
         // zapisz wyrenderowany HTML tej wiadomości (żeby historia odtworzyła podglądy)
@@ -537,10 +991,12 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
           ebookState.currentChapter = 0;
           const cnt = extractChaptersCountFromTOC(tocFile.content);
           if (cnt) ebookState.totalChapters = cnt;
+          ebookState.tocContent = tocFile.content;
+          ebookState.tocEntries = parseTOCEntries(tocFile.content);
 
           attachActionBar(wrap, [
             {
-              label: "✅ Akceptuj spis",
+              label: "📘 Akceptuj spis",
               variant: "primary",
               onClick: async () => {
                 try {
@@ -548,6 +1004,9 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
                   addChatMessage("Spis treści zapisany. Generuję rozdział 1…", false);
                   ebookState.stage = 'chapters';
                   ebookState.currentChapter = 1;
+                  ebookState.accepted = [];
+                  ebookState.reasoningSummaries = {};
+                  renderAcceptedChapters();
                   await requestChapter(ebookState.currentChapter, "Rozpocznij rozdział 1 zgodnie ze spisem.");
                 } catch (e) {
                   addChatMessage("❌ Błąd zapisu spisu: " + e.message, false);
@@ -559,7 +1018,10 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
               onClick: async () => {
                 const notes = prompt("Co poprawić w spisie treści?");
                 if (!notes) return;
-                await sendToDeepSeekAI(`Popraw spis treści wg wskazówek: ${notes}. Zwróć TYLKO plik <FILE name="spis_tresci.txt">…</FILE> oraz linię __CHAPTERS_COUNT__=N.`);
+                await sendToDeepSeekAI(
+                  `Popraw spis treści wg wskazówek: ${notes}. Zwróć TYLKO plik <FILE name="spis_tresci.txt">…</FILE> oraz linię __CHAPTERS_COUNT__=N.`,
+                  { forceKnowledge: true, knowledgeQuery: 'spis treści ebook marketingowy' }
+                );
               }
             }
           ]);
@@ -573,16 +1035,16 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
           ebookState.stage = 'chapters';
           const m = chapterFile.name.match(/(\d+)/);
           const thisIdx = m ? parseInt(m[1],10) : ebookState.currentChapter || 1;
-          ebookState.lastGenerated = { 
-            type:'chapter', 
-            filename:chapterFile.name, 
-            content:chapterFile.content, 
-            chapterIndex:thisIdx 
+          ebookState.lastGenerated = {
+            type:'chapter',
+            filename:chapterFile.name,
+            content:chapterFile.content,
+            chapterIndex:thisIdx
           };
 
           attachActionBar(wrap, [
-            { label: "✅ Akceptuj rozdział", variant: "primary", onClick: async () => { await acceptChapterAndMaybeNext(false); } },
-            { label: "⏭️ Akceptuj i Generuj kolejny", onClick: async () => { await acceptChapterAndMaybeNext(true); } },
+            { label: "💾 Zapisz rozdział", variant: "primary", onClick: async () => { await acceptChapterAndMaybeNext(false); } },
+            { label: "⏭️ Zapisz i generuj kolejny", onClick: async () => { await acceptChapterAndMaybeNext(true); } },
             {
               label: "✏️ Popraw ten rozdział",
               onClick: async () => {
@@ -591,8 +1053,8 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
                 await sendToDeepSeekAI(
                   `Popraw rozdział ${thisIdx} wg wskazówek:
                    ${notes}
-                   Zwróć TYLKO:
-                   <FILE name="rozdzial_${String(thisIdx).padStart(2,'0')}.txt">…</FILE>.`
+                   Zwróć TYLKO pliki <FILE name="rozdzial_${String(thisIdx).padStart(2,'0')}.txt">…</FILE> oraz <FILE name="reasoning_${String(thisIdx).padStart(2,'0')}.txt">…</FILE>.`,
+                  { forceKnowledge: true, knowledgeQuery: buildChapterLabel(thisIdx) }
                 );
               }
             }
@@ -612,11 +1074,29 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
 
     async function requestChapter(idx, extraInstruction = "") {
       const n = String(idx).padStart(2,'0');
-      await sendToDeepSeekAI(
-        `Wygeneruj rozdział ${idx} (~800 słów) TYLKO jako:
-         <FILE name="rozdzial_${n}.txt">…</FILE>.
-         ${extraInstruction}`
-      );
+      const prevSummary = ebookState.reasoningSummaries[idx - 1] || '';
+      const currentEntry = getTocEntry(idx);
+      const nextEntry = getTocEntry(idx + 1);
+      const entryLabel = currentEntry
+        ? `${currentEntry.title}${currentEntry.description ? ' — ' + currentEntry.description : ''}`
+        : `Rozdział ${idx}`;
+      const nextInfo = nextEntry
+        ? `Następny rozdział według spisu: ${nextEntry.title}${nextEntry.description ? ' — ' + nextEntry.description : ''}.`
+        : 'To ostatni rozdział w zatwierdzonym spisie treści.';
+
+      const reminder = prevSummary
+        ? `Streszczenie poprzedniego rozdziału (do zachowania spójności):\n${prevSummary}`
+        : 'To pierwszy rozdział – nawiąż do koncepcji i spisu treści.';
+
+      const tocReminder = ebookState.tocContent
+        ? `Przypomnienie zatwierdzonego spisu treści:\n${ebookState.tocContent}`
+        : '';
+
+      const instruction = `Przygotuj rozdział ${idx} pod tytułem "${entryLabel}" (~800 słów).\n${tocReminder}\n${reminder}\n${nextInfo}\n${extraInstruction}`.trim();
+
+      const request = `${instruction}\n\nZwróć dokładnie dwa pliki w tej kolejności:\n1) <FILE name="rozdzial_${n}.txt">[finalna treść rozdziału – bez meta-komentarzy]</FILE>\n2) <FILE name="reasoning_${n}.txt">[Sekcje: Koncepcja eBooka; Streszczenie bieżącego rozdziału; Powiązanie z poprzednim rozdziałem; Zapowiedź kolejnego rozdziału]</FILE>`;
+
+      await sendToDeepSeekAI(request, { forceKnowledge: true, knowledgeQuery: entryLabel });
     }
 
     async function acceptChapterAndMaybeNext(generateNext) {
@@ -627,7 +1107,16 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
         // zapisz rozdział na serwerze (zaakceptowane) - BEZ reasoning
         await saveFileOnServer(last.filename, last.content);
 
+        if (ebookState.lastReasoningGenerated && ebookState.lastReasoningGenerated.chapterIndex === last.chapterIndex) {
+          try {
+            await saveFileOnServer(ebookState.lastReasoningGenerated.filename, ebookState.lastReasoningGenerated.content);
+          } catch (reasoningErr) {
+            addChatMessage(`⚠️ Nie udało się zapisać reasoning dla rozdziału ${last.chapterIndex}: ${reasoningErr.message}`, false);
+          }
+        }
+
         ebookState.accepted.push({ filename: last.filename, chapterIndex: last.chapterIndex });
+        renderAcceptedChapters();
 
         // koniec?
         const total = ebookState.totalChapters;
@@ -665,7 +1154,7 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
           addChatMessage(`Akceptuję. Generuję rozdział ${ebookState.currentChapter}…`, false);
           await requestChapter(ebookState.currentChapter);
         } else {
-          addChatMessage("Rozdział zapisany. Możesz wybrać „⏭️ Akceptuj i Generuj kolejny” albo poprosić o poprawki.", false);
+          addChatMessage("Rozdział zapisany. Użyj panelu „Zaakceptowane rozdziały”, aby poprosić o nadpisanie lub usunięcie treści.", false);
           ebookState.currentChapter = last.chapterIndex;
         }
       } catch (e) {
