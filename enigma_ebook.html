@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Enigma E‑Book Builder</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* === STYL JAK W ENIGMA VISUAL (1:1) === */
+    html { background-color: #000; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000000; color: #f6f6f6;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; margin: 0;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+    .chat-container { width: 100%; max-width: 800px; height: 100%;
+      background: #000000; border-radius: 8px; display: flex; flex-direction: column;
+      overflow: hidden; position: relative; }
+    .chat-header {
+      background: linear-gradient(180deg, #2e2e2e 20%, #0f0f0f 80%);
+      color: #f6f6f6; padding: 15px 24px; flex-shrink: 0; display: flex;
+      justify-content: space-between; align-items: center; border-bottom: none;
+    }
+    .header-info h2 { font-size: 0.9em; font-weight: 500; }
+    .header-menu { position: relative; }
+    .header-menu i { color: #6B7280; cursor: pointer; }
+    .menu-dropdown {
+      display: none; position: absolute; right: 0; top: 30px; background-color: #1f1f22;
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; z-index: 10; width: 150px;
+    }
+    .menu-dropdown a {
+      color: #f6f6f6; padding: 10px 15px; text-decoration: none; display: block; font-size: 14px;
+    }
+    .menu-dropdown a:hover { background-color: #2a2a2e; }
+
+    .chat-messages {
+      flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; margin-top: 10px;
+    }
+    .message {
+      max-width: 85%; padding: 14px 20px; border-radius: 16px; word-wrap: break-word; line-height: 1.55;
+      box-sizing: border-box; font-size: 14px;
+      background: linear-gradient(180deg, rgba(34,34,34,0.9), rgba(22,22,22,0.9));
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .user-message { align-self: flex-end; margin-left: auto; color: #f6f6f6; }
+    .bot-message  { align-self: flex-start; margin-right: auto; }
+    .bot-message strong { display:block; font-weight:600; color:#d1d5db; margin-bottom:8px; }
+
+    .chat-input-container { padding: 16px 16px 14px 14px; flex-shrink: 0; }
+    .chat-input-wrapper { position: relative; }
+    #user-input {
+      width: 100%; min-height: 48px; max-height: 200px; padding: 13px 80px 13px 24px;
+      background-color: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 14px;
+      color:#f6f6f6; outline: none; resize: none; font-family: inherit; font-size: 14px; line-height: 1.5;
+      transition: border-color 0.2s ease; box-sizing: border-box;
+    }
+    #user-input:focus { border-color: #d6b376; }
+    #send-btn {
+      position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+      background: none; color: #f6f6f6; border: none; width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: background-color 0.2s ease;
+    }
+    #send-btn:hover:not(:disabled) { background: #d6b376; color:#101010; }
+    #send-btn:disabled { background: none; color: #6B7280; cursor: not-allowed; }
+
+    .typing-indicator { align-self: flex-start; max-width: 85%; }
+    .typing-dot { width: 8px; height: 8px; background-color: #d6b376; border-radius: 50%;
+      animation: typing-animation 1.4s infinite ease-in-out; }
+    @keyframes typing-animation {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+    .typing-indicator-dots {
+      display: flex; gap: 6px; padding: 18px 20px;
+      background: linear-gradient(180deg, rgba(34,34,34,0.9), rgba(22,22,22,0.9));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+    }
+
+    /* Pasek akcji pod odpowiedzią (Akceptuj / Popraw / Dalej / Scal) */
+    .action-bar {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .action-btn {
+      background: #1f1f22; border: 1px solid rgba(255,255,255,0.12);
+      color: #f6f6f6; padding: 6px 10px; border-radius: 10px; font-size: 12px; cursor: pointer;
+    }
+    .action-btn:hover { background:#2a2a2e; }
+    .action-btn.primary { background:#d6b376; color:#101010; border-color:#d6b376; }
+    .action-btn.danger  { border-color:#e26a6a; color:#ffdede; }
+
+    /* === PODGLĄD PLIKÓW TXT W BĄBLU CZATU === */
+    .file-block { margin-top:10px; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:#141414; }
+    .file-block-header { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; gap:8px; }
+    .file-name { font-size:12px; color:#d1d5db; font-weight:600; display:flex; align-items:center; gap:6px; }
+    .file-actions { display:flex; gap:6px; }
+    .file-actions button,
+    .file-actions a { background:#1f1f22; border:1px solid rgba(255,255,255,.12); color:#f6f6f6; font-size:11px; padding:5px 8px; border-radius:8px; text-decoration:none; cursor:pointer; }
+    .file-actions .primary { background:#d6b376; color:#101010; border-color:#d6b376; }
+    .file-preview { display:none; border-top:1px solid rgba(255,255,255,.08); }
+    .file-preview-body {
+      font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      white-space: pre-wrap; padding:12px; font-size:12.5px; line-height:1.55; color:#e5e7eb;
+      max-height:320px; overflow:auto;
+    }
+
+    /* Modal historii */
+    .history-modal { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:20; justify-content:center; align-items:center; }
+    .history-content { background-color:#121212; padding:24px; border-radius:12px; width:80%; max-width:500px; max-height:80vh; display:flex; flex-direction:column; }
+    .history-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .history-header h3 { margin:0; font-size:1.2em; }
+    #close-history { background:none; border:none; color:#f6f6f6; font-size:24px; cursor:pointer; }
+    #history-list { list-style:none; padding:0; margin:0; overflow-y:auto; }
+    #history-list li { padding:12px 15px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:14px; transition:background-color .2s ease; }
+    #history-list li:hover { background-color:#2a2a2e; }
+    #history-list li:last-child { border-bottom:none; }
+
+    /* Link do pobrania finalnego ebooka */
+    .final-download {
+      background: linear-gradient(180deg, rgba(34,34,34,0.9), rgba(22,22,22,0.9));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+      padding: 16px; margin-top: 10px; text-align: center;
+    }
+    .final-download a {
+      background: #d6b376; color: #101010; padding: 10px 20px;
+      border-radius: 8px; text-decoration: none; font-weight: 600;
+      display: inline-block; transition: background-color 0.2s ease;
+    }
+    .final-download a:hover { background: #e5c58c; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="header-info"><h2 id="chat-title">Enigma E‑Book Builder</h2></div>
+      <div class="header-menu">
+        <i class="fa-solid fa-ellipsis" id="menu-icon"></i>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <a href="#" id="new-chat-btn">Nowy czat</a>
+          <a href="#" id="end-chat-btn">Zakończ czat</a>
+          <a href="#" id="history-btn">Historia czatów</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="chat-input-container">
+      <div class="chat-input-wrapper">
+        <textarea id="user-input" placeholder="Napisz wiadomość..." rows="1"></textarea>
+        <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div class="history-modal" id="history-modal">
+    <div class="history-content">
+      <div class="history-header">
+        <h3>Historia Czatów</h3>
+        <button id="close-history">&times;</button>
+      </div>
+      <ul id="history-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       KONFIG & STAN SESJI
+    ==========================*/
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput    = document.getElementById('user-input');
+    const sendBtn      = document.getElementById('send-btn');
+
+    const menuIcon     = document.getElementById('menu-icon');
+    const menuDropdown = document.getElementById('menu-dropdown');
+    const newChatBtn   = document.getElementById('new-chat-btn');
+    const endChatBtn   = document.getElementById('end-chat-btn');
+    const historyBtn   = document.getElementById('history-btn');
+    const historyModal = document.getElementById('history-modal');
+    const closeHistoryBtn = document.getElementById('close-history');
+    const historyList  = document.getElementById('history-list');
+
+    let currentChatId = null;
+
+    // Unikalny identyfikator sesji do zapisu plików na serwerze
+    const ebookState = {
+      sessionId: `ebook_${Math.random().toString(36).slice(2,8)}_${Date.now()}`,
+      stage: 'intro',           // intro -> meta -> toc -> chapters -> final
+      currentChapter: 0,
+      totalChapters: null,
+      lastGenerated: null,      // { type: 'chapter', filename, content, chapterIndex }
+      accepted: []              // [{filename, chapterIndex}]
+    };
+
+    // Pełny kontekst rozmowy (dla API)
+    const conversationContext = {
+      fullHistory: [],
+      coreInstructions:
+`# **🔥 AI COPYWRITING MASTER 🔥**
+Jesteś asystentem budującym eBooki (100+ stron – jeśli temat wymaga).
+Zasady KRYTYCZNE:
+• Nigdy nie wypisuj pełnych rozdziałów w czacie. Zamiast tego zawsze zwracaj treść jako blok pliku.
+• Format pliku: <FILE name="NAZWA.txt">...treść...</FILE>
+• Poza blokami pliku podawaj TYLKO krótki status (2–5 zdań) i kolejną akcję (np. „Akceptuj / Popraw / Dalej”).
+• Zachowuj pełny kontekst całego eBooka między rozdziałami.
+
+Proces:
+1) Zbierz: temat, grupa docelowa, styl, oczekiwana długość (liczba rozdziałów i ~długość rozdziału).
+2) Gdy wszystko masz – wygeneruj **spis treści** jako plik:
+   <FILE name="spis_tresci.txt">
+   [lista numerowana rozdziałów z tytułami]
+   __CHAPTERS_COUNT__=N
+   </FILE>
+   W czacie daj krótki opis + poproś o akceptację spisu.
+3) Po akceptacji spisu generuj ROZDZIAŁY po kolei (ok. ~800 słów każdy) tak:
+   <FILE name="rozdzial_01.txt">…Treść rozdziału 1…</FILE>
+4) Po każdym rozdziale czekaj na decyzję: Akceptuj / Popraw (z instrukcjami).
+   • Przy „Popraw”: wygeneruj ponownie TYLKO rozdział N (jak wyżej).
+5) Po zaakceptowaniu wszystkich – nie wypisuj treści w czacie:
+   backend scali rozdziały do ebook_final.txt.
+
+Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdziałami.`
+    };
+
+    /* =========================
+       UI — DROBNE POMOCNICZE
+    ==========================*/
+    function addChatMessage(html, isUser = false) {
+      const div = document.createElement('div');
+      div.classList.add('message', isUser ? 'user-message' : 'bot-message');
+      div.innerHTML = html;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    function showTypingIndicator() {
+      const indicator = document.createElement('div');
+      indicator.id = 'typing-indicator';
+      indicator.className = 'typing-indicator';
+      indicator.innerHTML =
+        `<div class="typing-indicator-dots">
+           <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+         </div>`;
+      chatMessages.appendChild(indicator);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    function hideTypingIndicator() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    function saveChat() {
+      if (!currentChatId) return;
+      const chats = JSON.parse(localStorage.getItem('enigma_chats') || '{}');
+      chats[currentChatId] = { timestamp: Date.now(), history: conversationContext.fullHistory };
+      localStorage.setItem('enigma_chats', JSON.stringify(chats));
+    }
+
+    function startNewChat() {
+      currentChatId = `chat_${Date.now()}`;
+      conversationContext.fullHistory = [];
+      chatMessages.innerHTML = '';
+
+      addChatMessage(
+        `<strong>Witaj! Tu Enigma E‑Book Builder.</strong>
+        Zacznijmy: podaj proszę <em>temat</em> eBooka, docelową <em>grupę odbiorców</em> i preferowany <em>styl</em> (np. biznesowy/storytelling/techniczny).<br>
+        Potem ustalimy długość (liczbę rozdziałów i ~długość rozdziału), wygeneruję spis treści do akceptacji, a następnie rozdziały – każdy jako <u>plik .txt do podglądu i pobrania</u>.`);
+      userInput.focus();
+    }
+
+    function displayChatHistory() {
+      const chats = JSON.parse(localStorage.getItem('enigma_chats') || '{}');
+      const thirtyDaysAgo = Date.now() - 30*24*60*60*1000;
+      const recent = Object.entries(chats).filter(([,c]) => c.timestamp > thirtyDaysAgo);
+      recent.sort(([,a],[,b]) => b.timestamp - a.timestamp);
+
+      const historyList = document.getElementById('history-list');
+      historyList.innerHTML = '';
+      if (!recent.length) {
+        historyList.innerHTML = '<li>Brak historii czatów.</li>';
+      } else {
+        for (const [id, chat] of recent) {
+          const firstUser = chat.history.find(m => m.role==='user');
+          const preview = firstUser?.content ? (firstUser.content.slice(0,40)+'...') : 'Czat';
+          const li = document.createElement('li');
+          li.textContent = `${preview} - ${new Date(chat.timestamp).toLocaleString()}`;
+          li.addEventListener('click', () => {
+            currentChatId = id;
+            conversationContext.fullHistory = chat.history;
+            renderChatFromHistory();
+            historyModal.style.display = 'none';
+          });
+          historyList.appendChild(li);
+        }
+      }
+      historyModal.style.display = 'flex';
+    }
+
+    function renderChatFromHistory() {
+      chatMessages.innerHTML = '';
+      for (const m of conversationContext.fullHistory) {
+        // Jeśli zapisywaliśmy gotowy HTML (np. z podglądami plików) — użyj go
+        const html = (m.role === 'assistant') ? (m.renderedHtml || m.content.replace(/\n/g,'<br>'))
+                                              : m.content.replace(/\n/g,'<br>');
+        addChatMessage(html, m.role==='user');
+      }
+    }
+
+    /* =========================
+       PODGLĄD PLIKÓW (TXT)
+    ==========================*/
+    function escapeHtml(s){
+      return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function makePreviewBlock(name, content, opts = {}){
+      const id = `pv_${Math.random().toString(36).slice(2,8)}_${Date.now()}`;
+      const downloadHtml = opts.downloadHtml || '';
+      return `
+        <div class="file-block" data-pv-id="${id}">
+          <div class="file-block-header">
+            <div class="file-name"><i class="fa-regular fa-file-lines" style="color:#d6b376;"></i>${escapeHtml(name)}</div>
+            <div class="file-actions">
+              <button class="btn-toggle-preview" data-pv-target="${id}">Podgląd</button>
+              <button class="btn-copy-text" data-pv-target="${id}">Kopiuj</button>
+              ${downloadHtml}
+            </div>
+          </div>
+          <div class="file-preview" id="${id}">
+            <div class="file-preview-body">${escapeHtml(content)}</div>
+          </div>
+        </div>`;
+    }
+    // Delegacja zdarzeń dla przycisków „Podgląd/Kopiuj”
+    chatMessages.addEventListener('click', (e)=>{
+      const btnPreview = e.target.closest('.btn-toggle-preview');
+      const btnCopy = e.target.closest('.btn-copy-text');
+
+      if(btnPreview){
+        const id = btnPreview.dataset.pvTarget;
+        const pane = document.getElementById(id);
+        if (!pane) return;
+        const open = pane.style.display === 'block';
+        pane.style.display = open ? 'none' : 'block';
+        btnPreview.textContent = open ? 'Podgląd' : 'Ukryj';
+      }
+
+      if(btnCopy){
+        const id = btnCopy.dataset.pvTarget;
+        const pane = document.getElementById(id);
+        const body = pane?.querySelector('.file-preview-body');
+        if(!body) return;
+        const tmp = document.createElement('textarea');
+        tmp.value = body.textContent;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        btnCopy.textContent = 'Skopiowano';
+        setTimeout(()=>btnCopy.textContent='Kopiuj', 1200);
+      }
+    });
+
+    /* =========================
+       PARSOWANIE BLOKÓW PLIKÓW
+    ==========================*/
+    function parseFileBlocks(text) {
+      const files = [];
+      const re = /<FILE\s+name="([^"]+)">\s*([\s\S]*?)<\/FILE>/g;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        files.push({ name: m[1], content: m[2].trim() });
+      }
+      return files;
+    }
+    function makeDownloadLink(name, content) {
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url  = URL.createObjectURL(blob);
+      return `<a href="${url}" download="${name}" class="primary">Pobierz</a>`;
+    }
+    function extractChaptersCountFromTOC(tocContent) {
+      const m = tocContent.match(/^\s*__CHAPTERS_COUNT__\s*=\s*(\d+)\s*$/m);
+      return m ? parseInt(m[1], 10) : null;
+    }
+
+    /* =========================
+       BACKEND: DEEPSEEK + ZAPIS
+    ==========================*/
+    async function callDeepSeek(messages, retryCount = 0) {
+        const maxRetries = 2;
+        
+        try {
+            const res = await fetch("deepseek_proxy.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    model: "deepseek-chat", 
+                    messages,
+                    max_tokens: 4000
+                })
+            });
+            
+            if (!res.ok) {
+                if (res.status === 502 && retryCount < maxRetries) {
+                    // Czekaj i ponów przy błędzie 502
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                    return callDeepSeek(messages, retryCount + 1);
+                }
+                throw new Error(`HTTP ${res.status}`);
+            }
+            
+            return res.json();
+        } catch (error) {
+            if (retryCount < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                return callDeepSeek(messages, retryCount + 1);
+            }
+            throw error;
+        }
+    }
+    
+    async function saveFileOnServer(filename, content) {
+      const res = await fetch("combine_ebooks.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save",
+          sessionId: ebookState.sessionId,
+          filename,
+          content
+        })
+      });
+      if (!res.ok) throw new Error(`Save HTTP ${res.status}`);
+      return res.json(); // { ok:true, url:"/ebooks/temp/<sessionId>/<filename>" }
+    }
+    async function combineFinalOnServer() {
+      const res = await fetch("combine_ebooks.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "combine",
+          sessionId: ebookState.sessionId
+        })
+      });
+      if (!res.ok) throw new Error(`Combine HTTP ${res.status}`);
+      return res.json(); // { ok:true, url:"/ebooks/temp/<sessionId>/ebook_final.txt" }
+    }
+
+    /* =========================
+       GŁÓWNY PRZEPŁYW ROZMOWY
+    ==========================*/
+    function attachActionBar(parentMessageEl, buttons) {
+      const bar = document.createElement('div');
+      bar.className = 'action-bar';
+      for (const b of buttons) {
+        const btn = document.createElement('button');
+        btn.className = `action-btn ${b.variant||''}`;
+        btn.textContent = b.label;
+        btn.addEventListener('click', b.onClick);
+        bar.appendChild(btn);
+      }
+      parentMessageEl.appendChild(bar);
+    }
+
+    async function sendToDeepSeekAI(userText) {
+      showTypingIndicator();
+
+      // zbuduj pełne messages dla DeepSeek API
+      const apiHistory = conversationContext.fullHistory.map(m => ({ role: m.role, content: m.content }));
+      const messages = [
+        { role: "system", content: conversationContext.coreInstructions },
+        { role: "system", content:
+          `KONTROLER:
+           • sessionId=${ebookState.sessionId}
+           • stage=${ebookState.stage}
+           • currentChapter=${ebookState.currentChapter}
+           • totalChapters=${ebookState.totalChapters ?? 'unknown'}
+           • PAMIĘTAJ o formacie <FILE name="...">...</FILE>.`
+        },
+        ...apiHistory,
+        { role: "user", content: userText }
+      ];
+
+      try {
+        const data = await callDeepSeek(messages);
+        const raw = (data.choices?.[0]?.message?.content || '').trim();
+        hideTypingIndicator();
+
+        // Zapamiętaj surową odpowiedź w historii (dla kontekstu)
+        const assistantMsg = { role: 'assistant', content: raw };
+        conversationContext.fullHistory.push(assistantMsg);
+
+        // Znajdź pliki i zbuduj status
+        const files = parseFileBlocks(raw);
+        let statusText = raw.replace(/<FILE[\s\S]*?<\/FILE>/g, '').trim();
+        if (!statusText) statusText = "Gotowe. Wybierz akcję poniżej.";
+
+        // Bąbel odpowiedzi
+        let html = statusText.replace(/\n/g,'<br>');
+        const wrap = addChatMessage(html, false);
+
+        // Podglądy + szybkie pobrania (TYLKO rozdziały i spis treści)
+        let renderedFilesHtml = '';
+        for (const f of files) {
+          // Pomijamy pliki reasoning - nie są potrzebne użytkownikowi
+          if (f.name.includes('reasoning')) continue;
+          
+          const dl = makeDownloadLink(f.name, f.content);
+          renderedFilesHtml += makePreviewBlock(f.name, f.content, { downloadHtml: dl });
+        }
+        if (renderedFilesHtml) {
+          const filesWrap = document.createElement('div');
+          filesWrap.innerHTML = renderedFilesHtml;
+          wrap.appendChild(filesWrap);
+        }
+
+        // zapisz wyrenderowany HTML tej wiadomości (żeby historia odtworzyła podglądy)
+        assistantMsg.renderedHtml = wrap.innerHTML;
+
+        // --- Sterowanie etapami ---
+
+        // 1) Spis treści
+        const tocFile = files.find(f => f.name.toLowerCase() === 'spis_tresci.txt');
+        if (tocFile) {
+          ebookState.stage = 'toc';
+          ebookState.currentChapter = 0;
+          const cnt = extractChaptersCountFromTOC(tocFile.content);
+          if (cnt) ebookState.totalChapters = cnt;
+
+          attachActionBar(wrap, [
+            {
+              label: "✅ Akceptuj spis",
+              variant: "primary",
+              onClick: async () => {
+                try {
+                  await saveFileOnServer('spis_tresci.txt', tocFile.content);
+                  addChatMessage("Spis treści zapisany. Generuję rozdział 1…", false);
+                  ebookState.stage = 'chapters';
+                  ebookState.currentChapter = 1;
+                  await requestChapter(ebookState.currentChapter, "Rozpocznij rozdział 1 zgodnie ze spisem.");
+                } catch (e) {
+                  addChatMessage("❌ Błąd zapisu spisu: " + e.message, false);
+                }
+              }
+            },
+            {
+              label: "✏️ Popraw spis",
+              onClick: async () => {
+                const notes = prompt("Co poprawić w spisie treści?");
+                if (!notes) return;
+                await sendToDeepSeekAI(`Popraw spis treści wg wskazówek: ${notes}. Zwróć TYLKO plik <FILE name="spis_tresci.txt">…</FILE> oraz linię __CHAPTERS_COUNT__=N.`);
+              }
+            }
+          ]);
+          saveChat();
+          return;
+        }
+
+        // 2) Rozdział (BEZ reasoning)
+        const chapterFile = files.find(f => /^rozdzial_\d+\.txt$/i.test(f.name));
+        if (chapterFile) {
+          ebookState.stage = 'chapters';
+          const m = chapterFile.name.match(/(\d+)/);
+          const thisIdx = m ? parseInt(m[1],10) : ebookState.currentChapter || 1;
+          ebookState.lastGenerated = { 
+            type:'chapter', 
+            filename:chapterFile.name, 
+            content:chapterFile.content, 
+            chapterIndex:thisIdx 
+          };
+
+          attachActionBar(wrap, [
+            { label: "✅ Akceptuj rozdział", variant: "primary", onClick: async () => { await acceptChapterAndMaybeNext(false); } },
+            { label: "⏭️ Akceptuj i Generuj kolejny", onClick: async () => { await acceptChapterAndMaybeNext(true); } },
+            {
+              label: "✏️ Popraw ten rozdział",
+              onClick: async () => {
+                const notes = prompt("Co poprawić w tym rozdziale?");
+                if (!notes) return;
+                await sendToDeepSeekAI(
+                  `Popraw rozdział ${thisIdx} wg wskazówek:
+                   ${notes}
+                   Zwróć TYLKO:
+                   <FILE name="rozdzial_${String(thisIdx).padStart(2,'0')}.txt">…</FILE>.`
+                );
+              }
+            }
+          ]);
+          saveChat();
+          return;
+        }
+
+        // Etap pytań/meta — tylko zapis rozmowy
+        saveChat();
+
+      } catch (e) {
+        hideTypingIndicator();
+        addChatMessage("❌ Błąd: " + e.message, false);
+      }
+    }
+
+    async function requestChapter(idx, extraInstruction = "") {
+      const n = String(idx).padStart(2,'0');
+      await sendToDeepSeekAI(
+        `Wygeneruj rozdział ${idx} (~800 słów) TYLKO jako:
+         <FILE name="rozdzial_${n}.txt">…</FILE>.
+         ${extraInstruction}`
+      );
+    }
+
+    async function acceptChapterAndMaybeNext(generateNext) {
+      const last = ebookState.lastGenerated;
+      if (!last || last.type!=='chapter') return;
+
+      try {
+        // zapisz rozdział na serwerze (zaakceptowane) - BEZ reasoning
+        await saveFileOnServer(last.filename, last.content);
+
+        ebookState.accepted.push({ filename: last.filename, chapterIndex: last.chapterIndex });
+
+        // koniec?
+        const total = ebookState.totalChapters;
+        const isLast = (total && last.chapterIndex >= total);
+
+        if (isLast) {
+          addChatMessage("Wszystkie rozdziały zaakceptowane. Scalanie w jeden plik…", false);
+          const r = await combineFinalOnServer();
+          if (r?.ok && r?.url) {
+            // TYLKO link do pobrania finalnego ebooka - BEZ podglądu
+            const finalHtml = `
+              <div class="final-download">
+                <strong>🎉 Ebook gotowy!</strong><br>
+                <a href="${r.url}" download="ebook_final.txt">📘 Pobierz gotowego ebooka</a>
+              </div>`;
+            addChatMessage(finalHtml, false);
+            
+            // zapisz w historii
+            conversationContext.fullHistory.push({ 
+              role:'assistant', 
+              content:'[final ebook download]', 
+              renderedHtml: finalHtml 
+            });
+            saveChat();
+          } else {
+            addChatMessage("❌ Scalanie nie powiodło się.", false);
+          }
+          ebookState.stage = 'final';
+          return;
+        }
+
+        // Generuj kolejny rozdział?
+        if (generateNext) {
+          ebookState.currentChapter = last.chapterIndex + 1;
+          addChatMessage(`Akceptuję. Generuję rozdział ${ebookState.currentChapter}…`, false);
+          await requestChapter(ebookState.currentChapter);
+        } else {
+          addChatMessage("Rozdział zapisany. Możesz wybrać „⏭️ Akceptuj i Generuj kolejny” albo poprosić o poprawki.", false);
+          ebookState.currentChapter = last.chapterIndex;
+        }
+      } catch (e) {
+        addChatMessage("❌ Błąd zapisu rozdziału: " + e.message, false);
+      }
+    }
+
+    /* =========================
+       OBSŁUGA UI
+    ==========================*/
+    async function handleSendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+      addChatMessage(message, true);
+      conversationContext.fullHistory.push({ role:'user', content: message });
+      userInput.value=''; userInput.style.height='auto';
+      await sendToDeepSeekAI(message);
+      userInput.focus();
+    }
+
+    // menu
+    const menuIconEl = document.getElementById('menu-icon');
+    const menuDropdownEl = document.getElementById('menu-dropdown');
+    const historyBtnEl = document.getElementById('history-btn');
+    const newChatBtnEl = document.getElementById('new-chat-btn');
+    const endChatBtnEl = document.getElementById('end-chat-btn');
+    const closeHistoryBtnEl = document.getElementById('close-history');
+
+    menuIconEl.addEventListener('click', () => {
+      menuDropdownEl.style.display = (menuDropdownEl.style.display==='block' ? 'none':'block');
+    });
+    document.addEventListener('click', (e) => {
+      if (!menuIconEl.contains(e.target) && !menuDropdownEl.contains(e.target)) menuDropdownEl.style.display='none';
+    });
+
+    newChatBtnEl.addEventListener('click', (e) => { e.preventDefault(); startNewChat(); menuDropdownEl.style.display='none'; });
+    endChatBtnEl.addEventListener('click', (e) => { e.preventDefault(); startNewChat(); menuDropdownEl.style.display='none'; });
+    historyBtnEl.addEventListener('click', (e) => { e.preventDefault(); displayChatHistory(); menuDropdownEl.style.display='none'; });
+    closeHistoryBtnEl.addEventListener('click', () => { historyModal.style.display='none'; });
+
+    sendBtn.addEventListener('click', handleSendMessage);
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
+    });
+    userInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      startNewChat();
+      sendBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
