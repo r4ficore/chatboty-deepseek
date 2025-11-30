@@ -31,8 +31,8 @@ function optimizeMessages($messages) {
         }
     }
     
-    // Zachowaj tylko ostatnie 6 wiadomości konwersacji + wszystkie systemowe
-    $recentMessages = array_slice($otherMessages, -6);
+    // Zachowaj tylko ostatnie 8 wiadomości konwersacji + wszystkie systemowe
+    $recentMessages = array_slice($otherMessages, -8);
     
     return array_merge($systemMessages, $recentMessages);
 }
@@ -105,7 +105,7 @@ try {
         'model'    => $model,
         'messages' => optimizeMessages($messages), // OPTYMALIZACJA HISTORII
         'stream'   => false,
-        'max_tokens' => 4000, // Ogranicz odpowiedź
+        'max_tokens' => 5000, // Ogranicz odpowiedź
         'temperature' => 0.7
     ];
     
