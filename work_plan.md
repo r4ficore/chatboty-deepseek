@@ -5,7 +5,7 @@
 - Zanotuj, które fragmenty logiki można ponownie użyć dla designera (wysyłanie promptów systemowych, zarządzanie wiadomościami, obsługa limitów/timeoutów, zapisywanie historii lokalnej).
 - Zapoznaj się z `enigma_designer_prompt.md`, by upewnić się, jaką rolę i zasady ma mieć nowy chatbot (warunek startu, format outputu, limity długości ~2400 linii, sygnalizacja pracy modelu).
 - Sprawdź przykładowe strony w `landings/`, aby dopasować oczekiwany poziom UI/UX oraz elementy interaktywne dla landing pages.
-- Status: rozpoczęty. Notatki i wnioski zapisane w `stage1_analysis.md` (architektura, logika, elementy do re-use, wymagania promptu designera, inspiracje landingów).
+- Status: zakończony. Notatki i wnioski zapisane w `stage1_analysis.md` (architektura, logika, elementy do re-use, wymagania promptu designera, inspiracje landingów).
 
 ## Etap 2: Projekt funkcjonalny enigma_designer.html
 - Zaprojektuj layout czatu na bazie stylistyki Enigma (ciemny motyw, komponenty jak w ebook writerze) z dostosowaniem do roli designera.
@@ -13,6 +13,7 @@
 - Określ mechanizm informowania o długim generowaniu kodu (np. rozbudowany typing indicator/baner „model generuje kod na żywo”).
 - Zaplanuj sposób prezentacji wygenerowanego kodu (blok ```html``` w odpowiedzi, klarowny podział między kodem a komentarzem dla użytkownika) oraz ewentualne akcje pobrania/kopiowania.
 - Ustal ustawienia API: ten sam endpoint `deepseek_proxy.php`, model/system prompt ustawiony zgodnie z `enigma_designer_prompt.md`, opcjonalne parametry (temperature, max_tokens) dostosowane do dużych odpowiedzi.
+- Status: w toku. Dokument „Etap 2 – projekt funkcjonalny” zapisany w `stage2_design.md`.
 
 ## Etap 3: Implementacja UI/UX
 - Utwórz nowy plik `enigma_designer.html` na bazie struktury `enigma_ebook.html` (header, chat area, input, historia), usuwając funkcje specyficzne dla ebooków (TOC, rozdziały, pliki txt) i dodając elementy przydatne dla projektowania landingów (np. sekcja preview/CTA kopiuj kod).
