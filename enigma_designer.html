@@ -87,6 +87,9 @@
 
     .input-dock { display:flex; flex-direction:column; gap:10px; padding:4px; background:var(--panel-strong); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
     .input-top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:0.85rem; padding:0 6px; }
+    .quick-actions { display:flex; gap:8px; flex-wrap:wrap; padding:0 6px; }
+    .quick-actions button { border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--text); border-radius:12px; padding:8px 10px; font-size:0.88rem; cursor:pointer; }
+    .quick-actions button:hover { border-color:var(--accent); color:var(--accent-strong); }
     .input-area { position:relative; }
     textarea {
       width:100%; min-height:68px; max-height:220px; padding:14px 54px 14px 14px; border-radius:12px;
@@ -154,6 +157,7 @@
       </div>
       <div class="header-actions">
         <button class="ghost-btn" id="new-session"><i class="fa-solid fa-bolt"></i> Nowa sesja</button>
+        <button class="ghost-btn" id="restore-last"><i class="fa-solid fa-rotate-left"></i> Ostatnia sesja</button>
         <button class="ghost-btn" id="open-history"><i class="fa-solid fa-clock-rotate-left"></i> Historia</button>
         <button class="ghost-btn" id="open-help"><i class="fa-solid fa-circle-question"></i> Pomoc</button>
       </div>
@@ -194,6 +198,11 @@
           <div class="input-top">
             <span id="length-info">0 znaków • wymagany pełny output LA</span>
             <span><i class="fa-solid fa-shield"></i> Endpoint: deepseek_proxy.php</span>
+          </div>
+          <div class="quick-actions">
+            <button type="button" id="qa-improve"><i class="fa-solid fa-wand-magic-sparkles"></i> Poproś o poprawki</button>
+            <button type="button" id="qa-variant"><i class="fa-solid fa-shuffle"></i> Nowy wariant layoutu</button>
+            <button type="button" id="qa-review"><i class="fa-solid fa-list-check"></i> Podsumowanie sekcji</button>
           </div>
           <div class="input-area">
             <textarea id="user-input" placeholder="Wklej output Landing Architect lub poproś o poprawki…"></textarea>
@@ -279,6 +288,12 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     const historyModal = document.getElementById('history-modal');
     const historyList = document.getElementById('history-list');
     const helpModal = document.getElementById('help-modal');
+    const restoreLastBtn = document.getElementById('restore-last');
+    const quickActions = [
+      { id: 'qa-improve', text: 'Popraw wersję landing page\'a na podstawie poprzedniego outputu LA. Zmiany: ' },
+      { id: 'qa-variant', text: 'Na bazie tego samego outputu LA przygotuj alternatywny wariant layoutu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
+      { id: 'qa-review', text: 'Podsumuj otrzymany output LA i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' }
+    ];
 
     let messages = [];
     let askingForLA = false;
@@ -339,7 +354,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
             const div = document.createElement('div');
             div.style.marginTop = '10px';
             div.style.color = 'var(--text)';
-            div.innerHTML = comment;
+            div.textContent = comment;
             el.appendChild(div);
           }
         } else {
@@ -437,6 +452,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
         if (!res.ok) {
           showToast(`Problem z API (kod ${res.status}). Spróbuj ponownie.`);
+          addMessage('system', 'API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.');
           sendBtn.disabled = false;
           typingEl.style.display = 'none';
           longRunEl.classList.remove('active');
@@ -448,6 +464,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         addMessage('assistant', assistantMessage);
       } catch (err) {
         showToast('Błąd połączenia lub timeout. Spróbuj ponownie.');
+        addMessage('system', 'Połączenie zostało przerwane lub przekroczono limit czasu. Możesz ponowić wysłanie lub uzupełnić prompt.');
       } finally {
         sendBtn.disabled = false;
         typingEl.style.display = 'none';
@@ -505,6 +522,23 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       });
     }
 
+    function restoreLastSession() {
+      const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      if (!records.length) { showToast('Brak zapisanych rozmów.'); return; }
+      const latest = records[0];
+      messages = latest.messages || [];
+      currentSessionId = latest.id || Date.now();
+      askingForLA = false;
+      renderMessages();
+      showToast('Przywrócono ostatnią sesję.');
+    }
+
+    function prefillAction(text) {
+      userInput.value = text;
+      updateLength();
+      userInput.focus();
+    }
+
     document.getElementById('open-history').addEventListener('click', () => { loadHistoryList(); historyModal.classList.add('open'); });
     document.getElementById('close-history').addEventListener('click', () => historyModal.classList.remove('open'));
     document.getElementById('open-help').addEventListener('click', () => helpModal.classList.add('open'));
@@ -520,6 +554,12 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       userInput.value = '';
       updateLength();
       showToast('Rozpoczęto nową sesję.');
+    });
+
+    restoreLastBtn.addEventListener('click', restoreLastSession);
+    quickActions.forEach(({ id, text }) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => prefillAction(text));
     });
 
     sendBtn.addEventListener('click', handleSend);
