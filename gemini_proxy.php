@@ -25,9 +25,11 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/gemini_errors.log');
 
+// Domyślny model: Gemini 3 Pro (zgodnie z wymaganiami projektu).
 const DEFAULT_MODEL          = 'gemini-3.0-pro';
 const DEFAULT_MAX_OUTPUT     = 9000; // pozwala na pełny dokument HTML
 const MAX_OUTPUT_CAP         = 12000; // miękki limit bezpieczeństwa
+// Gemini 3 dostępny jest w interfejsie v1beta (REST generativelanguage.googleapis.com/v1beta).
 const API_BASE               = 'https://generativelanguage.googleapis.com/v1beta';
 
 function respond(int $status, array $payload): void {
@@ -108,7 +110,10 @@ function buildPayload(array $input): array {
     ];
 
     if ($systemPrompt) {
+        // W v1beta dostępne jest pole systemInstruction; wstrzykujemy tam prompt,
+        // zamiast traktować go jako wiadomość użytkownika.
         $payload['systemInstruction'] = [
+            'role'  => 'system',
             'parts' => [ ['text' => $systemPrompt] ],
         ];
     }
