@@ -26,3 +26,10 @@
 - Ustaw `model: "deepseek-reasoner"`, `max_tokens: 7800` jako bezpieczny domyślny limit.
 - Przy bardzo długich outputach LA skracaj historię rozmowy, żeby zmieścić się w limicie tokenów.
 - Zostaw komunikaty timeoutu na 5 minut i pokazuj użytkownikowi, że model nadal pracuje, bo Reasoner potrafi liczyć dłużej.
+- **Górny limit odpowiedzi to 8192 tokeny i nie da się go zwiększyć** – API zwraca błąd 400, gdy `max_tokens` wyjdzie poza zakres `1–8192`.
+- Jeśli potrzebujesz dłuższego HTML-a:
+  - Generuj w dwóch krokach (np. struktura + sekcje) i łącz po stronie klienta.
+  - Wymuszaj krótsze prompty i skracaj historię, aby maksymalnie wykorzystać budżet wyjściowy.
+  - Użyj strumieniowania i przycinaj tylko końcówkę zamiast przerwania w środku (np. kontroluj długość na podstawie `content-length`).
+  - Dodaj „kontynuuj od…” jako automatyczny follow-up, jeśli odpowiedź została obcięta.
+  - Rozważ bardziej zwięzły styl (np. komponenty reusable, zmienne CSS), aby zmieścić więcej treści w limicie tokenów.
