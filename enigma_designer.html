@@ -220,49 +220,10 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="designer_config.js"></script>
   <script>
-    const DESIGNER_SYSTEM_PROMPT = `
-[ROLA I TOŻSAMOŚĆ]
-
-Jesteś modelem DESIGNER.
-
-Twoje zadanie: NA PODSTAWIE outputu od modelu Landing Architect (struktura sekcji + treść + „NOTATKI DLA DESIGNERA/DEVA”) tworzysz kompletny, gotowy do użycia plik HTML landing page’a. Możesz inspirować się przykładami z katalogu landings/ i korzystać z ściągi efektów/mikrointerakcji (design_effects_cheatsheet.md – 26 technik).
-
-Na starcie rozmowy aktywnie pomagasz zebrać brief: pytasz o produkt, grupę docelową i CTA oraz proponujesz 2–3 style do wyboru (np. minimalistyczny, glassmorphism, brutalistyczny, typograficzny, immersyjny). Zachęcasz do wklejenia pełnej struktury Landing Architect (STYLE, mapa sekcji, treści, NOTATKI DLA DESIGNERA/DEVA), ale możesz prowadzić użytkownika pytaniami i zaproponować szkic, jeśli na razie ma tylko luźny opis.
-
-Nie zmieniasz strategii sprzedażowej.
-Nie wymyślasz treści ani struktury, jeśli ich nie dostałeś.
-Konwertujesz istniejący projekt na realny layout w kodzie.
-
----
-
-[WARUNEK STARTU KODOWANIA – BARDZO WAŻNE]
-
-Zanim wygenerujesz JAKIKOLWIEK kod HTML, muszą być spełnione wszystkie warunki:
-1) W ostatniej wiadomości od użytkownika masz realny output z Landing Architect (STYLE, mapa sekcji, treść sekcji, NOTATKI DLA DESIGNERA/DEVA).
-2) Jesteś w stanie konkretnie wskazać te fragmenty w tekście.
-3) To nie jest opis Twojej roli ani sam prompt systemowy.
-Jeśli którykolwiek punkt nie jest spełniony: NIE generujesz kodu. Zamiast tego zaproponuj style, dopytaj o produkt, CTA i treści sekcji, a w razie potrzeby zaproponuj szkic LA do uzupełnienia.
-
-[OUTPUT – FORMAT ODPOWIEDZI]
-Jeden kompletny plik HTML w bloku \`\`\`html ... \`\`\`. Bez dodatkowych opisów, chyba że użytkownik o nie poprosi. Jeśli trzeba komentarz – po kodzie, krótko.
-
-[ZASADY KODOWANIA]
-- HTML5, semantyka, responsive mobile-first.
-- CSS w jednym <style> w <head>.
-- JS tylko dla elementów wymaganych w notatkach (FAQ, sticky, licznik itd.).
-- Treść z Landing Architect jest źródłem prawdy; nie wymyślasz brakujących danych.
-- Dostępność: czytelne CTA, aria-label gdzie potrzebne.
-
-[MAPOWANIE STYLÓW NA KOD]
-#1 Minimalistyczny (jasne tło, przestrzeń), #2 Immersyjny z obrazem tła, #3 Typograficzny, #4 Interaktywny z micro-HCI, #5 Neobrutalistyczny, #6 Storytelling wideo-first, #7 Ciemny wysoki kontrast. Jeśli miks, pierwszy numer = styl główny, kolejne = akcenty.
-
-[ESTETYKA I DYNAMIKA]
-Strona ma wyglądać nowocześnie i wykorzystywać interaktywne elementy zgodne ze STYLE i NOTATKAMI. Możesz stosować: floating notifications, animated counter, sticky navigation reagującą na scroll, gradient animations, spotlight effects na kartach, animated borders/pulsujące obramowania dla elementów PRO, scroll animations, interactive FAQ z animacjami, shimmer effects na przyciskach, pulse animations, glassmorphism, gradientowe tła i inne nowoczesne mikroanimacje. Wybieraj efekty, które wzmacniają czytelność i konwersję.
-
-[PRIORYTETY]
-Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność strukturze, treści i stylowi. Kod ma być czysty, responsywny i gotowy do użycia jako index.html.
-    `;
+    // Ładuje centralny prompt systemowy dla Gemini 3 (z pliku designer_config.js).
+    const DESIGNER_SYSTEM_PROMPT = window.DESIGNER_GEMINI_SYSTEM_PROMPT;
 
     const historyKey = 'enigma_designer_history';
     const messagesEl = document.getElementById('messages');
@@ -294,7 +255,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     }
 
     function resetToIntro() {
-      messages = [{ role: 'assistant', content: introMessage }];
+      messages = [{ role: 'assistant', content: introMessage, displayContent: introMessage }];
       renderMessages();
       persistHistory();
     }
@@ -307,8 +268,12 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
         const meta = document.createElement('div');
         meta.className = 'meta';
-        meta.innerHTML = `<span>${msg.role === 'user' ? 'Ty' : msg.role === 'assistant' ? 'Enigma Designer' : 'System'}</span>`;
+        const metaSpan = document.createElement('span');
+        metaSpan.textContent = msg.role === 'user' ? 'Ty' : msg.role === 'assistant' ? 'Enigma Designer' : 'System';
+        meta.appendChild(metaSpan);
         el.appendChild(meta);
+
+        const displayContent = msg.displayContent ?? msg.content;
 
         if (msg.role === 'assistant') {
           const { codeBlock, comment } = splitAssistantContent(msg.content);
@@ -343,7 +308,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
           }
         } else {
           const div = document.createElement('div');
-          div.innerText = msg.content;
+          div.textContent = displayContent;
           el.appendChild(div);
         }
 
@@ -387,8 +352,8 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       showToast('Pobrano plik enigma-landing.html');
     }
 
-    function addMessage(role, content) {
-      messages.push({ role, content });
+    function addMessage(role, content, displayContent) {
+      messages.push({ role, content, displayContent: displayContent ?? content });
       renderMessages();
       persistHistory();
     }
@@ -396,7 +361,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     const params = new URLSearchParams(window.location.search);
     const storedProxy = localStorage.getItem('enigma_proxy_url');
     const proxyUrl = (() => {
-      const url = params.get('proxy')?.trim() || storedProxy || 'deepseek_proxy.php';
+      const url = params.get('proxy')?.trim() || storedProxy || 'gemini_proxy.php';
       if (params.get('proxy')) {
         localStorage.setItem('enigma_proxy_url', url);
       }
@@ -405,16 +370,40 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
     const staticHost = /\.github\.io$/i.test(window.location.hostname) || window.location.hostname === 'github.io';
     if (staticHost && !params.get('proxy') && !storedProxy) {
-      addMessage('system', 'Wygląda, że korzystasz z hostingu statycznego (np. GitHub Pages). Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom stronę z serwera obsługującego PHP.');
+      addMessage('system', 'Wygląda, że korzystasz z hostingu statycznego (np. GitHub Pages). Dodaj parametr ?proxy=https://twoj-serwer.pl/gemini_proxy.php lub uruchom stronę z serwera obsługującego PHP.');
+    }
+
+    const SAFE_INPUT_LIMIT = 4000;
+
+    function normalizeBrief(input) {
+      if (input && typeof input === 'object' && input.sections) return input;
+      if (typeof input === 'string') {
+        try {
+          const parsed = JSON.parse(input);
+          if (parsed && typeof parsed === 'object' && parsed.sections) return parsed;
+        } catch (_) {
+          // fallback to legacy text
+        }
+      }
+      return {
+        sections: [
+          { id: 'main', title: 'Brief', content: typeof input === 'string' ? input : String(input ?? '') }
+        ],
+        version: '1.0-legacy-adapted',
+      };
     }
 
     function handleSend() {
-      const content = userInput.value.trim();
-      if (!content) return;
+      const rawContent = userInput.value.trim();
+      if (!rawContent) return;
 
-      addMessage('user', content);
+      const limited = rawContent.slice(0, SAFE_INPUT_LIMIT);
+      const brief = normalizeBrief(limited);
+      const serialized = typeof brief === 'string' ? brief : JSON.stringify(brief, null, 2);
+
+      addMessage('user', serialized, limited);
       userInput.value = '';
-      sendToDeepSeek();
+      sendToGemini();
     }
 
     function normalizeError(err, fallback = '') {
@@ -451,73 +440,104 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       const tail = latestChunk.slice(-400);
       const continuationPrompt = `Kontynuuj generowanie kodu HTML dokładnie od miejsca, w którym przerwałeś. Nie powtarzaj wcześniejszego fragmentu. Zacznij od kontynuacji po tym tekście:\n${tail}`;
       addMessage('user', continuationPrompt);
-      await sendToDeepSeek(true);
+      await sendToGemini(true);
       autoContinuationInFlight = false;
     }
 
-    async function sendToDeepSeek(skipAutoContinuation = false) {
+    const CHUNK_TOKENS = 1024;
+    const MAX_CHUNKS = 12;
+
+    async function fetchChunk(payload) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 300000);
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      return res;
+    }
+
+    async function sendToGemini(skipAutoContinuation = false) {
       typingEl.style.display = 'flex';
       longRunEl.classList.add('active');
       sendBtn.disabled = true;
 
       const historyWindow = messages.slice(-10);
-      const payload = {
-        model: 'deepseek-reasoner',
-        messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...historyWindow.map(m => ({ role: m.role, content: m.content }))],
-        max_tokens: 7800,
-        temperature: 0.4
-      };
+      let combined = '';
+      let finishReason = '';
 
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 300000);
-        const res = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
+      for (let i = 0; i < MAX_CHUNKS; i++) {
+        const continuationHint = combined
+          ? `Kontynuuj generowanie kodu HTML po tym fragmencie (nie powtarzaj wcześniejszego tekstu):\n${combined.slice(-400)}`
+          : '';
 
-        const responseText = await res.text();
-        let data;
+        const assembledMessages = [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...historyWindow.map(m => ({ role: m.role, content: m.content }))];
+        if (continuationHint) {
+          assembledMessages.push({ role: 'user', content: continuationHint });
+        }
+
+        const payload = {
+          model: 'gemini-3.0-pro',
+          messages: assembledMessages,
+          max_output_tokens: CHUNK_TOKENS,
+          temperature: 0.35
+        };
+
         try {
-          data = responseText ? JSON.parse(responseText) : null;
-        } catch (e) {
-          data = null;
-        }
+          const res = await fetchChunk(payload);
+          const responseText = await res.text();
+          let data;
+          try {
+            data = responseText ? JSON.parse(responseText) : null;
+          } catch (_) {
+            data = null;
+          }
 
-        if (!res.ok) {
-          const apiError = normalizeError(data?.error) || data?.message || (responseText ? responseText.trim() : '');
-          const staticHint = (res.status === 404 || res.status === 405) && staticHost
-            ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
-            : '';
-          const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
-          showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
-          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
-          sendBtn.disabled = false;
-          typingEl.style.display = 'none';
-          longRunEl.classList.remove('active');
-          return;
-        }
+          if (!res.ok) {
+            const apiError = normalizeError(data?.error) || data?.message || (responseText ? responseText.trim() : '');
+            const staticHint = (res.status === 404 || res.status === 405) && staticHost
+              ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/gemini_proxy.php lub uruchom lokalnie z PHP.'
+              : '';
+            const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
+            showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
+            addMessage('system', '⚠️ Problem z połączeniem. Spróbuj ponownie.');
+            break;
+          }
 
-        const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
-        addMessage('assistant', assistantMessage);
+          const assistantMessage = data?.choices?.[0]?.message?.content || '';
+          finishReason = data?.choices?.[0]?.finish_reason || '';
+          combined += assistantMessage;
 
-        if (!skipAutoContinuation && isLikelyTruncated(assistantMessage)) {
-          addMessage('system', 'Wygląda, że odpowiedź mogła zostać ucięta. Automatycznie proszę o dokończenie…');
-          await requestContinuation(assistantMessage);
+          const endedByLimit = typeof finishReason === 'string' && finishReason.toLowerCase().includes('max');
+          const truncated = isLikelyTruncated(assistantMessage) || endedByLimit;
+          if (!assistantMessage || !truncated) {
+            break;
+          }
+        } catch (err) {
+          const aborted = err?.name === 'AbortError';
+          const hint = aborted ? 'Limit czasu (5 minut) został przekroczony.' : 'Błąd połączenia z proxy/API.';
+          showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
+          addMessage('system', '⚠️ Problem z połączeniem. Spróbuj ponownie.');
+          break;
         }
-      } catch (err) {
-        const aborted = err?.name === 'AbortError';
-        const hint = aborted ? 'Limit czasu (5 minut) został przekroczony.' : 'Błąd połączenia z proxy/API.';
-        showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
-        addMessage('system', `${hint} Możesz ponowić wysłanie, skrócić prompt albo użyć innego endpointu proxy.`);
-      } finally {
-        sendBtn.disabled = false;
-        typingEl.style.display = 'none';
-        longRunEl.classList.remove('active');
       }
+
+      if (combined.trim()) {
+        addMessage('assistant', combined);
+        if (!skipAutoContinuation && isLikelyTruncated(combined)) {
+          addMessage('system', 'Wygląda, że odpowiedź mogła zostać ucięta. Automatycznie proszę o dokończenie…');
+          await requestContinuation(combined);
+        }
+      } else {
+        addMessage('system', '⚠️ Brak odpowiedzi od modelu. Spróbuj ponownie.');
+      }
+
+      typingEl.style.display = 'none';
+      longRunEl.classList.remove('active');
+      sendBtn.disabled = false;
     }
 
     function persistHistory() {
@@ -542,7 +562,10 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       historyList.innerHTML = '';
       const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
       if (!records.length) {
-        historyList.innerHTML = '<li style="color: var(--muted);">Brak zapisanych rozmów.</li>';
+        const li = document.createElement('li');
+        li.style.color = 'var(--muted)';
+        li.textContent = 'Brak zapisanych rozmów.';
+        historyList.appendChild(li);
         return;
       }
       records.forEach((rec, idx) => {
@@ -550,7 +573,14 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         li.className = 'history-item';
         const meta = document.createElement('div');
         meta.className = 'meta';
-        meta.innerHTML = `<span class="title">${rec.title}</span><span style="color:var(--muted); font-size:0.85rem;">${new Date(rec.date).toLocaleString()}</span>`;
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'title';
+        titleSpan.textContent = rec.title;
+        const dateSpan = document.createElement('span');
+        dateSpan.style.color = 'var(--muted)';
+        dateSpan.style.fontSize = '0.85rem';
+        dateSpan.textContent = new Date(rec.date).toLocaleString();
+        meta.append(titleSpan, dateSpan);
         const actions = document.createElement('div');
         actions.className = 'history-actions';
         const openBtn = document.createElement('button');
