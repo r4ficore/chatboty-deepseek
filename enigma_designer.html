@@ -1,1 +1,594 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enigma Designer – AI Landing Page Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #030303;
+      --panel: rgba(18, 18, 18, 0.92);
+      --panel-strong: rgba(26, 26, 26, 0.95);
+      --border: rgba(255,255,255,0.08);
+      --muted: #9ca3af;
+      --text: #f5f6f7;
+      --accent: #d6b376;
+      --accent-strong: #f0d7a2;
+      --shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
 
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; }
+    body { display:flex; justify-content:center; align-items:stretch; }
+
+    .app-shell { width:100%; max-width:1080px; display:flex; flex-direction:column; min-height:100vh; }
+
+    header {
+      position:sticky; top:0; z-index:5;
+      background:linear-gradient(180deg, #0c0c0c 0%, #040404 100%);
+      border-bottom:1px solid var(--border);
+      padding:18px 22px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      box-shadow: var(--shadow);
+    }
+    .brand { display:flex; flex-direction:column; gap:4px; }
+    .brand h1 { font-size:1.05rem; margin:0; letter-spacing:0.04em; text-transform:uppercase; }
+    .brand p { margin:0; color:var(--muted); font-size:0.9rem; }
+
+    .header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .ghost-btn {
+      background:var(--panel); border:1px solid var(--border); color:var(--text);
+      padding:10px 12px; border-radius:12px; font-weight:600; font-size:0.9rem; cursor:pointer;
+      display:flex; align-items:center; gap:8px; transition:all 0.2s ease;
+    }
+    .ghost-btn:hover { border-color:var(--accent); color:var(--accent-strong); }
+
+    .chat-wrapper { flex:1; display:flex; flex-direction:column; gap:16px; padding:16px; }
+
+    .banner {
+      background: linear-gradient(120deg, rgba(214,179,118,0.12), rgba(214,179,118,0.05));
+      border:1px solid rgba(214,179,118,0.3);
+      padding:18px 18px 16px; border-radius:14px; color:var(--text);
+      display:flex; gap:12px; align-items:flex-start; box-shadow:var(--shadow);
+    }
+    .banner i { color:var(--accent); font-size:1.2rem; }
+    .banner strong { display:block; margin-bottom:6px; }
+    .banner p { margin:0; color:var(--muted); line-height:1.6; }
+    .banner .cta { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+    .pill {
+      background:rgba(255,255,255,0.04); color:var(--text); border:1px solid var(--border);
+      padding:8px 12px; border-radius:999px; font-size:0.85rem; display:inline-flex; align-items:center; gap:6px;
+    }
+
+    .chat-surface {
+      flex:1; background:var(--panel); border:1px solid var(--border); border-radius:18px;
+      padding:18px; display:flex; flex-direction:column; gap:16px; box-shadow:var(--shadow);
+      min-height:50vh;
+    }
+
+    .messages { flex:1; display:flex; flex-direction:column; gap:14px; overflow-y:auto; }
+    .message { max-width:88%; padding:14px 16px; border-radius:16px; line-height:1.6; font-size:0.95rem; position:relative; }
+    .message.user { align-self:flex-end; background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border:1px solid var(--border); }
+    .message.assistant { align-self:flex-start; background:linear-gradient(180deg, rgba(30,30,30,0.95), rgba(18,18,18,0.95)); border:1px solid var(--border); }
+    .message.system { align-self:flex-start; border:1px dashed rgba(214,179,118,0.4); background:rgba(214,179,118,0.05); color:var(--muted); }
+    .message .meta { display:flex; gap:8px; align-items:center; margin-bottom:8px; font-size:0.82rem; color:var(--muted); }
+    .message.wide { max-width:100%; width:100%; }
+
+    .typing-indicator { display:flex; align-items:center; gap:8px; }
+    .typing-dots { display:flex; gap:6px; background:linear-gradient(180deg, rgba(34,34,34,0.9), rgba(22,22,22,0.9)); border:1px solid var(--border); padding:12px 14px; border-radius:14px; }
+    .typing-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; animation: typing 1.4s infinite ease-in-out; }
+    .typing-dot:nth-child(2){ animation-delay:0.15s; }
+    .typing-dot:nth-child(3){ animation-delay:0.3s; }
+    @keyframes typing { 0%,60%,100%{ transform:translateY(0); opacity:0.6;} 30%{ transform:translateY(-6px); opacity:1;} }
+
+    .input-dock { display:flex; flex-direction:column; gap:10px; padding:4px; background:var(--panel-strong); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
+    .input-top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:0.85rem; padding:0 6px; }
+    .quick-actions { display:flex; gap:8px; flex-wrap:wrap; padding:0 6px; }
+    .quick-actions button { border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--text); border-radius:12px; padding:8px 10px; font-size:0.88rem; cursor:pointer; }
+    .quick-actions button:hover { border-color:var(--accent); color:var(--accent-strong); }
+    .input-area { position:relative; }
+    textarea {
+      width:100%; min-height:68px; max-height:220px; padding:14px 54px 14px 14px; border-radius:12px;
+      border:1px solid var(--border); background:rgba(10,10,10,0.7); color:var(--text);
+      resize:vertical; font-family:inherit; font-size:0.95rem; line-height:1.5; outline:none; transition:border 0.2s ease;
+    }
+    textarea:focus { border-color:var(--accent); }
+    button#send-btn {
+      position:absolute; right:10px; bottom:10px; width:36px; height:36px;
+      border-radius:12px; border:1px solid var(--border); background:var(--accent);
+      color:#0f0b05; font-weight:700; cursor:pointer; transition:all 0.2s ease;
+    }
+    #send-btn:disabled { background:rgba(255,255,255,0.08); color:var(--muted); cursor:not-allowed; }
+
+    .long-run-banner {
+      display:none; align-items:center; gap:12px; padding:10px 12px; border-radius:12px;
+      background:linear-gradient(120deg, rgba(214,179,118,0.2), rgba(214,179,118,0.05));
+      border:1px solid rgba(214,179,118,0.35); color:var(--text);
+    }
+    .long-run-banner.active { display:flex; }
+    .shimmer {
+      width:64px; height:10px; border-radius:999px; background:linear-gradient(90deg, rgba(214,179,118,0.1) 0%, rgba(214,179,118,0.6) 50%, rgba(214,179,118,0.1) 100%);
+      background-size:200% 100%; animation: shimmer 1.4s linear infinite;
+    }
+    @keyframes shimmer { 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+
+    pre.code-block { margin:0; background:#0b0b0b; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; font-size:0.9rem; line-height:1.55; }
+    pre code { font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    .code-toolbar { display:flex; gap:8px; justify-content:flex-end; margin-bottom:8px; flex-wrap:wrap; }
+    .code-toolbar button { border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); border-radius:10px; padding:8px 10px; font-size:0.85rem; cursor:pointer; }
+    .code-toolbar button:hover { border-color:var(--accent); color:var(--accent-strong); }
+
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.7); z-index:20; }
+    .modal.open { display:flex; }
+    .modal-body { background:var(--panel-strong); border:1px solid var(--border); border-radius:14px; padding:18px; width:90%; max-width:520px; max-height:80vh; overflow:auto; box-shadow:var(--shadow); }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .modal-header h3 { margin:0; font-size:1.05rem; }
+    .modal-header button { background:none; border:none; color:var(--text); cursor:pointer; font-size:1.1rem; }
+    .history-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .history-item { border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:rgba(255,255,255,0.03); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .history-item .meta { display:flex; flex-direction:column; gap:4px; }
+    .history-item .title { font-weight:600; }
+    .history-actions { display:flex; gap:8px; }
+    .history-actions button { border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); border-radius:10px; padding:6px 8px; cursor:pointer; }
+
+    .toast { position:fixed; bottom:18px; right:18px; background:var(--panel-strong); border:1px solid var(--border); color:var(--text); padding:12px 16px; border-radius:12px; opacity:0; transform:translateY(12px); transition: all 0.3s ease; z-index:25; }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    @media (max-width: 720px) {
+      header { flex-direction:column; align-items:flex-start; }
+      .brand h1 { font-size:1rem; }
+      .chat-wrapper { padding:12px; }
+      .chat-surface { padding:12px; }
+      .message { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="brand">
+        <h1>Enigma Designer</h1>
+        <p>AI Landing Page Builder – generuje do 2400 linii HTML</p>
+      </div>
+      <div class="header-actions">
+        <button class="ghost-btn" id="new-session"><i class="fa-solid fa-bolt"></i> Nowa sesja</button>
+        <button class="ghost-btn" id="restore-last"><i class="fa-solid fa-rotate-left"></i> Ostatnia sesja</button>
+        <button class="ghost-btn" id="open-history"><i class="fa-solid fa-clock-rotate-left"></i> Historia</button>
+        <button class="ghost-btn" id="open-help"><i class="fa-solid fa-circle-question"></i> Pomoc</button>
+      </div>
+    </header>
+
+    <main class="chat-wrapper">
+      <section class="banner" id="start-banner">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <div>
+          <strong>Start: wklej pełny output Landing Architect.</strong>
+          <p>Aby wygenerować kod HTML, potrzebuję linii <code>STYLE:</code>, mapy sekcji, treści sekcji oraz <code>NOTATKI DLA DESIGNERA/DEVA</code>. Odpowiadam pełnym blokiem <code>html</code>, komentarze trzymam poza blokiem.</p>
+          <div class="cta">
+            <span class="pill"><i class="fa-solid fa-clipboard"></i> Wklej pełny output LA</span>
+            <span class="pill"><i class="fa-solid fa-clock"></i> Generuję do ~2400 linii, proszę czekać</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="chat-surface">
+        <div class="messages" id="messages"></div>
+        <div class="typing-indicator" id="typing" style="display:none;">
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+          <span style="color:var(--muted); font-size:0.9rem;">Model generuje kod na żywo…</span>
+        </div>
+        <div class="long-run-banner" id="long-run-banner">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <div>
+            <div><strong>Generuję do 2400 linii HTML</strong></div>
+            <div style="color:var(--muted);">Czekaj, aż kod się pojawi – możesz obserwować animację postępu.</div>
+          </div>
+          <div class="shimmer"></div>
+        </div>
+        <div class="input-dock">
+          <div class="input-top">
+            <span id="length-info">0 znaków • wymagany pełny output LA</span>
+            <span><i class="fa-solid fa-shield"></i> Endpoint: deepseek_proxy.php</span>
+          </div>
+          <div class="quick-actions">
+            <button type="button" id="qa-improve"><i class="fa-solid fa-wand-magic-sparkles"></i> Poproś o poprawki</button>
+            <button type="button" id="qa-variant"><i class="fa-solid fa-shuffle"></i> Nowy wariant layoutu</button>
+            <button type="button" id="qa-review"><i class="fa-solid fa-list-check"></i> Podsumowanie sekcji</button>
+            <button type="button" id="qa-sample"><i class="fa-solid fa-file-circle-plus"></i> Wklej szablon LA</button>
+          </div>
+          <div class="input-area">
+            <textarea id="user-input" placeholder="Wklej output Landing Architect lub poproś o poprawki…"></textarea>
+            <button id="send-btn" aria-label="Wyślij wiadomość"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="history-modal">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h3>Historia czatów</h3>
+        <button aria-label="Zamknij" id="close-history"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
+  </div>
+
+  <div class="modal" id="help-modal">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h3>Jak korzystać</h3>
+        <button aria-label="Zamknij pomoc" id="close-help"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p>1) Wklej pełny output Landing Architect: <code>STYLE</code>, mapa sekcji, treści sekcji, <code>NOTATKI DLA DESIGNERA/DEVA</code>.</p>
+      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~2400 linii). W trakcie widać animację pracy modelu.</p>
+      <p>3) Skopiuj lub pobierz kod z paska nad blokiem. Możesz zapisać i przywrócić historię sesji.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const DESIGNER_SYSTEM_PROMPT = `
+[ROLA I TOŻSAMOŚĆ]
+
+Jesteś modelem DESIGNER.
+
+Twoje zadanie: NA PODSTAWIE outputu od modelu Landing Architect (struktura sekcji + treść + „NOTATKI DLA DESIGNERA/DEVA”) tworzysz kompletny, gotowy do użycia plik HTML landing page’a.
+
+Nie zmieniasz strategii sprzedażowej.
+Nie wymyślasz treści ani struktury, jeśli ich nie dostałeś.
+Konwertujesz istniejący projekt na realny layout w kodzie.
+
+---
+
+[WARUNEK STARTU KODOWANIA – BARDZO WAŻNE]
+
+Zanim wygenerujesz JAKIKOLWIEK kod HTML, muszą być spełnione wszystkie warunki:
+1) W ostatniej wiadomości od użytkownika masz realny output z Landing Architect (STYLE, mapa sekcji, treść sekcji, NOTATKI DLA DESIGNERA/DEVA).
+2) Jesteś w stanie konkretnie wskazać te fragmenty w tekście.
+3) To nie jest opis Twojej roli ani sam prompt systemowy.
+Jeśli którykolwiek punkt nie jest spełniony: NIE generujesz kodu, prosisz jednorazowo o pełny output LA.
+
+[OUTPUT – FORMAT ODPOWIEDZI]
+Jeden kompletny plik HTML w bloku \`\`\`html ... \`\`\`. Bez dodatkowych opisów, chyba że użytkownik o nie poprosi. Jeśli trzeba komentarz – po kodzie, krótko.
+
+[ZASADY KODOWANIA]
+- HTML5, semantyka, responsive mobile-first.
+- CSS w jednym <style> w <head>.
+- JS tylko dla elementów wymaganych w notatkach (FAQ, sticky, licznik itd.).
+- Treść z Landing Architect jest źródłem prawdy; nie wymyślasz brakujących danych.
+- Dostępność: czytelne CTA, aria-label gdzie potrzebne.
+
+[MAPOWANIE STYLÓW NA KOD]
+#1 Minimalistyczny (jasne tło, przestrzeń), #2 Immersyjny z obrazem tła, #3 Typograficzny, #4 Interaktywny z micro-HCI, #5 Neobrutalistyczny, #6 Storytelling wideo-first, #7 Ciemny wysoki kontrast. Jeśli miks, pierwszy numer = styl główny, kolejne = akcenty.
+
+[PRIORYTETY]
+Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność strukturze, treści i stylowi. Kod ma być czysty, responsywny i gotowy do użycia jako index.html.
+    `;
+
+    const historyKey = 'enigma_designer_history';
+    const messagesEl = document.getElementById('messages');
+    const typingEl = document.getElementById('typing');
+    const longRunEl = document.getElementById('long-run-banner');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const lengthInfo = document.getElementById('length-info');
+    const toastEl = document.getElementById('toast');
+
+    const historyModal = document.getElementById('history-modal');
+    const historyList = document.getElementById('history-list');
+    const helpModal = document.getElementById('help-modal');
+    const restoreLastBtn = document.getElementById('restore-last');
+    const quickActions = [
+      { id: 'qa-improve', text: 'Popraw wersję landing page\'a na podstawie poprzedniego outputu LA. Zmiany: ' },
+      { id: 'qa-variant', text: 'Na bazie tego samego outputu LA przygotuj alternatywny wariant layoutu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
+      { id: 'qa-review', text: 'Podsumuj otrzymany output LA i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' },
+      { id: 'qa-sample', text: 'STYLE: #7 Ciemny wysoki kontrast\nSEKCJE: hero, sekcja atutów, social proof, oferta, CTA, FAQ, stopka\nTREŚCI: \n- Hero: Tytuł, lead, przycisk „Zamów demo”\n- Atuty: 3 karty z ikoną i opisem\n- Social proof: logotypy klientów\n- Oferta: 3 plany z ceną i CTA\n- CTA: pasek z przyciskiem\n- FAQ: 5 pytań/odpowiedzi\nNOTATKI DLA DESIGNERA/DEVA: Nowoczesny układ, gradientowe akcenty, subtelne animacje hover. Dodaj sticky navbar i przewijany FAQ.' }
+    ];
+
+    let messages = [];
+    let askingForLA = false;
+    let currentSessionId = Date.now();
+
+    function updateLength() {
+      const len = userInput.value.length;
+      lengthInfo.textContent = `${len} znaków • wymagany pełny output LA`;
+    }
+
+    userInput.addEventListener('input', updateLength);
+    updateLength();
+
+    function showToast(text) {
+      toastEl.textContent = text;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2200);
+    }
+
+    function renderMessages() {
+      messagesEl.innerHTML = '';
+      const banner = document.getElementById('start-banner');
+      banner.style.display = messages.length ? 'none' : 'flex';
+      messages.forEach((msg) => {
+        const el = document.createElement('div');
+        el.className = `message ${msg.role}`;
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<span>${msg.role === 'user' ? 'Ty' : msg.role === 'assistant' ? 'Enigma Designer' : 'System'}</span>`;
+        el.appendChild(meta);
+
+        if (msg.role === 'assistant') {
+          const { codeBlock, comment } = splitAssistantContent(msg.content);
+          if (codeBlock) {
+            const toolbar = document.createElement('div');
+            toolbar.className = 'code-toolbar';
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = 'Kopiuj kod';
+            copyBtn.onclick = () => copyToClipboard(codeBlock);
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Pobierz .html';
+            downloadBtn.onclick = () => downloadHTML(codeBlock);
+            const expandBtn = document.createElement('button');
+            expandBtn.textContent = 'Powiększ';
+            expandBtn.onclick = () => el.classList.toggle('wide');
+            toolbar.append(copyBtn, downloadBtn, expandBtn);
+            el.appendChild(toolbar);
+
+            const pre = document.createElement('pre');
+            pre.className = 'code-block';
+            const code = document.createElement('code');
+            code.textContent = codeBlock;
+            pre.appendChild(code);
+            el.appendChild(pre);
+          }
+          if (comment) {
+            const div = document.createElement('div');
+            div.style.marginTop = '10px';
+            div.style.color = 'var(--text)';
+            div.textContent = comment;
+            el.appendChild(div);
+          }
+        } else {
+          const div = document.createElement('div');
+          div.innerText = msg.content;
+          el.appendChild(div);
+        }
+
+        messagesEl.appendChild(el);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function splitAssistantContent(text) {
+      const codeRegex = /```html([\s\S]*?)```/i;
+      const match = text.match(codeRegex);
+      const codeBlock = match ? match[1].trim() : '';
+      const comment = match ? text.replace(match[0], '').trim() : text;
+      return { codeBlock, comment: comment === text && match ? '' : comment };
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => showToast('Skopiowano kod'));
+    }
+
+    function downloadHTML(code) {
+      const blob = new Blob([code], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'enigma-landing.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Pobrano plik enigma-landing.html');
+    }
+
+    function addMessage(role, content) {
+      messages.push({ role, content });
+      renderMessages();
+      persistHistory();
+    }
+
+    function hasLAContext(inputText) {
+      const text = inputText.toLowerCase();
+      return text.includes('style:') && text.includes('notatki dla designera') && /sekc|section|hero|cta|faq/.test(text);
+    }
+
+    function handleSend() {
+      const content = userInput.value.trim();
+      if (!content) return;
+
+      const contextAvailable = hasLAContext(content) || messages.some(m => m.role === 'user' && hasLAContext(m.content));
+      if (contextAvailable) askingForLA = false;
+      if (!contextAvailable && askingForLA) {
+        addMessage('system', 'Czekam na pełny output Landing Architect (STYLE, mapa sekcji, treści sekcji, NOTATKI DLA DESIGNERA/DEVA).');
+        userInput.value = '';
+        updateLength();
+        return;
+      }
+      if (!contextAvailable) {
+        addMessage('assistant', 'Żeby napisać kod HTML, potrzebuję pełnego outputu z Landing Architect: linia STYLE, mapa sekcji, treści sekcji i NOTATKI DLA DESIGNERA/DEVA. Wklej go proszę.');
+        askingForLA = true;
+        userInput.value = '';
+        updateLength();
+        return;
+      }
+
+      addMessage('user', content);
+      userInput.value = '';
+      updateLength();
+      sendToDeepSeek();
+    }
+
+    async function sendToDeepSeek() {
+      typingEl.style.display = 'flex';
+      longRunEl.classList.add('active');
+      sendBtn.disabled = true;
+
+      const payload = {
+        model: 'deepseek-chat',
+        messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
+        max_tokens: 9000,
+        temperature: 0.4
+      };
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 180000);
+        const res = await fetch('deepseek_proxy.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+          showToast(`Problem z API (kod ${res.status}). Spróbuj ponownie.`);
+          addMessage('system', 'API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.');
+          sendBtn.disabled = false;
+          typingEl.style.display = 'none';
+          longRunEl.classList.remove('active');
+          return;
+        }
+
+        const data = await res.json();
+        const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
+        addMessage('assistant', assistantMessage);
+      } catch (err) {
+        showToast('Błąd połączenia lub timeout. Spróbuj ponownie.');
+        addMessage('system', 'Połączenie zostało przerwane lub przekroczono limit czasu. Możesz ponowić wysłanie lub uzupełnić prompt.');
+      } finally {
+        sendBtn.disabled = false;
+        typingEl.style.display = 'none';
+        longRunEl.classList.remove('active');
+      }
+    }
+
+    function persistHistory() {
+      try {
+        const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        const title = (messages.find(m => m.role === 'user')?.content || 'Nowa sesja').slice(0, 60);
+        const record = { id: currentSessionId, title, date: new Date().toISOString(), messages: JSON.parse(JSON.stringify(messages)) };
+        const existingIndex = records.findIndex(r => r.id === currentSessionId);
+        if (existingIndex >= 0) {
+          records[existingIndex] = record;
+        } else {
+          records.unshift(record);
+        }
+        localStorage.setItem(historyKey, JSON.stringify(records.slice(0, 12)));
+      } catch (err) {
+        console.error('Persist history error', err);
+        showToast('Nie można zapisać historii (localStorage).');
+      }
+    }
+
+    function loadHistoryList() {
+      historyList.innerHTML = '';
+      const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      if (!records.length) {
+        historyList.innerHTML = '<li style="color: var(--muted);">Brak zapisanych rozmów.</li>';
+        return;
+      }
+      records.forEach((rec, idx) => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<span class="title">${rec.title}</span><span style="color:var(--muted); font-size:0.85rem;">${new Date(rec.date).toLocaleString()}</span>`;
+        const actions = document.createElement('div');
+        actions.className = 'history-actions';
+        const openBtn = document.createElement('button');
+        openBtn.textContent = 'Otwórz';
+        openBtn.onclick = () => {
+          messages = rec.messages || [];
+          currentSessionId = rec.id || Date.now();
+          askingForLA = false;
+          renderMessages();
+          historyModal.classList.remove('open');
+        };
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Usuń';
+        delBtn.onclick = () => {
+          records.splice(idx, 1);
+          localStorage.setItem(historyKey, JSON.stringify(records));
+          loadHistoryList();
+        };
+        actions.append(openBtn, delBtn);
+        li.append(meta, actions);
+        historyList.appendChild(li);
+      });
+    }
+
+    function restoreLastSession() {
+      const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      if (!records.length) { showToast('Brak zapisanych rozmów.'); return; }
+      const latest = records[0];
+      messages = latest.messages || [];
+      currentSessionId = latest.id || Date.now();
+      askingForLA = false;
+      renderMessages();
+      showToast('Przywrócono ostatnią sesję.');
+    }
+
+    function prefillAction(text) {
+      userInput.value = text;
+      updateLength();
+      userInput.focus();
+    }
+
+    document.getElementById('open-history').addEventListener('click', () => { loadHistoryList(); historyModal.classList.add('open'); });
+    document.getElementById('close-history').addEventListener('click', () => historyModal.classList.remove('open'));
+    document.getElementById('open-help').addEventListener('click', () => helpModal.classList.add('open'));
+    document.getElementById('close-help').addEventListener('click', () => helpModal.classList.remove('open'));
+    historyModal.addEventListener('click', (e) => { if (e.target === historyModal) historyModal.classList.remove('open'); });
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.classList.remove('open'); });
+
+    document.getElementById('new-session').addEventListener('click', () => {
+      messages = [];
+      askingForLA = false;
+      currentSessionId = Date.now();
+      renderMessages();
+      userInput.value = '';
+      updateLength();
+      showToast('Rozpoczęto nową sesję.');
+    });
+
+    restoreLastBtn.addEventListener('click', restoreLastSession);
+    quickActions.forEach(({ id, text }) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => prefillAction(text));
+    });
+
+    sendBtn.addEventListener('click', handleSend);
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSend();
+      }
+      if (e.key === 'Escape') {
+        if (historyModal.classList.contains('open')) historyModal.classList.remove('open');
+        if (helpModal.classList.contains('open')) helpModal.classList.remove('open');
+      }
+    });
+
+    renderMessages();
+  </script>
+</body>
+</html>
