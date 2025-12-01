@@ -197,7 +197,7 @@
         <div class="input-dock">
           <div class="input-top">
             <span id="length-info">0 znaków • wymagany pełny output LA</span>
-            <span><i class="fa-solid fa-shield"></i> Endpoint: deepseek_proxy.php</span>
+            <span><i class="fa-solid fa-shield"></i> <span id="endpoint-label">Endpoint: deepseek_proxy.php</span></span>
           </div>
           <div class="quick-actions">
             <button type="button" id="qa-improve"><i class="fa-solid fa-wand-magic-sparkles"></i> Poproś o poprawki</button>
@@ -403,6 +403,24 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       return text.includes('style:') && text.includes('notatki dla designera') && /sekc|section|hero|cta|faq/.test(text);
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const storedProxy = localStorage.getItem('enigma_proxy_url');
+    const proxyUrl = (() => {
+      const url = params.get('proxy')?.trim() || storedProxy || 'deepseek_proxy.php';
+      if (params.get('proxy')) {
+        localStorage.setItem('enigma_proxy_url', url);
+      }
+      return url;
+    })();
+
+    const endpointLabel = document.getElementById('endpoint-label');
+    endpointLabel.textContent = `Endpoint: ${proxyUrl}`;
+
+    const staticHost = /\.github\.io$/i.test(window.location.hostname) || window.location.hostname === 'github.io';
+    if (staticHost && !params.get('proxy') && !storedProxy) {
+      addMessage('system', 'Wygląda, że korzystasz z hostingu statycznego (np. GitHub Pages). Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom stronę z serwera obsługującego PHP.');
+    }
+
     function handleSend() {
       const content = userInput.value.trim();
       if (!content) return;
@@ -444,7 +462,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 180000);
-        const res = await fetch('deepseek_proxy.php', {
+        const res = await fetch(proxyUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -453,8 +471,11 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         clearTimeout(timeout);
 
         if (!res.ok) {
-          showToast(`Problem z API (kod ${res.status}). Spróbuj ponownie.`);
-          addMessage('system', 'API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.');
+          const staticHint = (res.status === 404 || res.status === 405) && staticHost
+            ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
+            : '';
+          showToast(`Problem z API (kod ${res.status}).${staticHint}`);
+          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${staticHint}`);
           sendBtn.disabled = false;
           typingEl.style.display = 'none';
           longRunEl.classList.remove('active');
