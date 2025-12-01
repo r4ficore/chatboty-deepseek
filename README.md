@@ -24,3 +24,8 @@ Skrót najważniejszych parametrów modelu Reasoner znajdziesz w pliku `deepseek
 - Jeśli podczas hostingu statycznego (GitHub Pages itp.) widzisz błąd 404/405 dla PHP, ustaw `proxy` na działający serwer z PHP.
 - Logi błędów API zapisują się w `deepseek_errors.log` obok pliku proxy.
 
+## Prompt systemowy dla Gemini 3
+- Centralny prompt używany przez Enigma Designer jest zdefiniowany w pliku `designer_config.js` jako stała `DESIGNER_GEMINI_SYSTEM_PROMPT`.
+- Frontend wstrzykuje go do zapytań jako wiadomość systemowa (patrz dolny skrypt w `enigma_designer.html`).
+- Aby zmienić prompt, edytuj treść w `designer_config.js`; to jedyne źródło prawdy wykorzystywane przez aplikację i backend.
+
