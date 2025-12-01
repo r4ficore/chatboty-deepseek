@@ -417,78 +417,108 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       sendToDeepSeek();
     }
 
-      function normalizeError(err, fallback = '') {
-        if (!err) return fallback;
-        if (typeof err === 'string') return err;
-        if (typeof err === 'object') {
-          if (typeof err.message === 'string') return err.message;
-          try {
-            return JSON.stringify(err);
-          } catch (_) {
-            return fallback || '[object Object]';
-          }
-        }
-        return String(err) || fallback;
-      }
-
-      async function sendToDeepSeek() {
-        typingEl.style.display = 'flex';
-        longRunEl.classList.add('active');
-        sendBtn.disabled = true;
-
-        const payload = {
-          model: 'deepseek-reasoner',
-          messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
-          max_tokens: 7800,
-          temperature: 0.4
-        };
-
+    function normalizeError(err, fallback = '') {
+      if (!err) return fallback;
+      if (typeof err === 'string') return err;
+      if (typeof err === 'object') {
+        if (typeof err.message === 'string') return err.message;
         try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 300000);
-          const res = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            signal: controller.signal
-          });
-          clearTimeout(timeout);
+          return JSON.stringify(err);
+        } catch (_) {
+          return fallback || '[object Object]';
+        }
+      }
+      return String(err) || fallback;
+    }
 
-          const responseText = await res.text();
-          let data;
-          try {
-            data = responseText ? JSON.parse(responseText) : null;
-          } catch (e) {
-            data = null;
-          }
+    function isLikelyTruncated(text) {
+      if (!text) return false;
+      const normalized = text.trim();
+      const hasHtml = /<html[\s>]/i.test(normalized);
+      const hasClosingHtml = /<\/html>\s*(```)?\s*$/i.test(normalized);
+      const fenceStart = normalized.indexOf('```html');
+      const hasOpenFence = fenceStart !== -1;
+      const lastFence = normalized.lastIndexOf('```');
+      const fenceClosed = hasOpenFence ? lastFence > fenceStart : true;
+      return (hasOpenFence && !fenceClosed) || (hasHtml && !hasClosingHtml);
+    }
 
-          if (!res.ok) {
-            const apiError = normalizeError(data?.error) || data?.message || (responseText ? responseText.trim() : '');
-            const staticHint = (res.status === 404 || res.status === 405) && staticHost
-              ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
-              : '';
-            const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
-            showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
-            addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
-            sendBtn.disabled = false;
-            typingEl.style.display = 'none';
-            longRunEl.classList.remove('active');
-            return;
-          }
+    let autoContinuationInFlight = false;
 
-          const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
-          addMessage('assistant', assistantMessage);
-        } catch (err) {
-          const aborted = err?.name === 'AbortError';
-          const hint = aborted ? 'Limit czasu (5 minut) został przekroczony.' : 'Błąd połączenia z proxy/API.';
-          showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
-          addMessage('system', `${hint} Możesz ponowić wysłanie, skrócić prompt albo użyć innego endpointu proxy.`);
-        } finally {
+    async function requestContinuation(latestChunk) {
+      if (autoContinuationInFlight) return;
+      autoContinuationInFlight = true;
+      const tail = latestChunk.slice(-400);
+      const continuationPrompt = `Kontynuuj generowanie kodu HTML dokładnie od miejsca, w którym przerwałeś. Nie powtarzaj wcześniejszego fragmentu. Zacznij od kontynuacji po tym tekście:\n${tail}`;
+      addMessage('user', continuationPrompt);
+      await sendToDeepSeek(true);
+      autoContinuationInFlight = false;
+    }
+
+    async function sendToDeepSeek(skipAutoContinuation = false) {
+      typingEl.style.display = 'flex';
+      longRunEl.classList.add('active');
+      sendBtn.disabled = true;
+
+      const historyWindow = messages.slice(-10);
+      const payload = {
+        model: 'deepseek-reasoner',
+        messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...historyWindow.map(m => ({ role: m.role, content: m.content }))],
+        max_tokens: 7800,
+        temperature: 0.4
+      };
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 300000);
+        const res = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        const responseText = await res.text();
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (e) {
+          data = null;
+        }
+
+        if (!res.ok) {
+          const apiError = normalizeError(data?.error) || data?.message || (responseText ? responseText.trim() : '');
+          const staticHint = (res.status === 404 || res.status === 405) && staticHost
+            ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
+            : '';
+          const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
+          showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
+          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
           sendBtn.disabled = false;
           typingEl.style.display = 'none';
           longRunEl.classList.remove('active');
+          return;
         }
+
+        const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
+        addMessage('assistant', assistantMessage);
+
+        if (!skipAutoContinuation && isLikelyTruncated(assistantMessage)) {
+          addMessage('system', 'Wygląda, że odpowiedź mogła zostać ucięta. Automatycznie proszę o dokończenie…');
+          await requestContinuation(assistantMessage);
+        }
+      } catch (err) {
+        const aborted = err?.name === 'AbortError';
+        const hint = aborted ? 'Limit czasu (5 minut) został przekroczony.' : 'Błąd połączenia z proxy/API.';
+        showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
+        addMessage('system', `${hint} Możesz ponowić wysłanie, skrócić prompt albo użyć innego endpointu proxy.`);
+      } finally {
+        sendBtn.disabled = false;
+        typingEl.style.display = 'none';
+        longRunEl.classList.remove('active');
       }
+    }
 
     function persistHistory() {
       try {
@@ -547,12 +577,12 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     function restoreLastSession() {
       const records = JSON.parse(localStorage.getItem(historyKey) || '[]');
       if (!records.length) { showToast('Brak zapisanych rozmów.'); return; }
-        const latest = records[0];
-        messages = latest.messages || [];
-        currentSessionId = latest.id || Date.now();
-        renderMessages();
-        showToast('Przywrócono ostatnią sesję.');
-      }
+      const latest = records[0];
+      messages = latest.messages || [];
+      currentSessionId = latest.id || Date.now();
+      renderMessages();
+      showToast('Przywrócono ostatnią sesję.');
+    }
 
     function prefillAction(text) {
       userInput.value = text;
