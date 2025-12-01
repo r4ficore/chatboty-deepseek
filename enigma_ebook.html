@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Enigma E‑Book Builder</title>
+  <title>Enigma Ebook Writer</title>
 
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,7 +99,7 @@
     .action-btn.primary { background:#d6b376; color:#101010; border-color:#d6b376; }
     .action-btn.danger  { border-color:#e26a6a; color:#ffdede; }
 
-    /* === PODGLĄD PLIKÓW TXT W BĄBLU CZATU === */
+    /* === PODGLĄD PLIKÓW TXT W BLOKU === */
     .file-block { margin-top:10px; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:#141414; }
     .file-block-header { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; gap:8px; }
     .file-name { font-size:12px; color:#d1d5db; font-weight:600; display:flex; align-items:center; gap:6px; }
@@ -189,11 +189,13 @@
       color: #fef3c7; margin: 14px 2px 6px 2px;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <div class="header-info"><h2 id="chat-title">Enigma E‑Book Builder</h2></div>
+      <div class="header-info"><h2 id="chat-title">Enigma Ebook Writer</h2></div>
       <div class="header-menu">
         <i class="fa-solid fa-ellipsis" id="menu-icon"></i>
         <div class="menu-dropdown" id="menu-dropdown">
@@ -237,6 +239,10 @@
     /* =========================
        KONFIG & STAN SESJI
     ==========================*/
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
+    }
+
     const chatMessages = document.getElementById('chat-messages');
     const userInput    = document.getElementById('user-input');
     const sendBtn      = document.getElementById('send-btn');
@@ -271,6 +277,26 @@
       reasoningSummaries: {},   // { [chapterIndex]: summary }
       lastReasoningGenerated: null
     };
+
+    const knowledgeBase = {
+      attachments: [],
+      totalChars: 0,
+      text: '',
+      limits: {
+        maxFiles: 3,
+        maxTotalChars: 60000,
+        maxFileSize: 4 * 1024 * 1024
+      }
+    };
+
+    function resetKnowledgeBaseState({ preserveAttachments = false } = {}) {
+      if (!preserveAttachments) {
+        knowledgeBase.attachments = [];
+        knowledgeBase.totalChars = 0;
+        knowledgeBase.text = '';
+      }
+      renderKnowledgeBaseAttachments();
+    }
 
     // Pełny kontekst rozmowy (dla API)
     const conversationContext = {
@@ -499,9 +525,8 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       resetEbookState({ newSession: true });
 
       addChatMessage(
-        `<strong>Witaj! Tu Enigma E‑Book Builder.</strong>
-        Zacznijmy: podaj proszę <em>temat</em> eBooka, docelową <em>grupę odbiorców</em> i preferowany <em>styl</em> (np. biznesowy/storytelling/techniczny).<br>
-        Potem ustalimy długość (liczbę rozdziałów i ~długość rozdziału), wygeneruję spis treści do akceptacji, a następnie rozdziały – każdy jako <u>plik .txt do podglądu i pobrania</u>.`);
+        `<strong>Zacznijmy:</strong>
+        Podaj temat Ebooka, docelową grupę odbiorców i określ preferowany styl (np. biznesowy/storytelling/techniczny). Potem ustalimy liczbę rozdziałów i ich ~długość, wygeneruję spis treści do akceptacji, a następnie rozdziały – każdy jako <u>plik .txt do podglądu i pobrania</u>.`);
       userInput.focus();
     }
 
@@ -525,6 +550,7 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
             currentChatId = id;
             conversationContext.fullHistory = chat.history;
             renderChatFromHistory();
+            resetKnowledgeBaseState({ preserveAttachments: false });
             historyModal.style.display = 'none';
           });
           historyList.appendChild(li);
@@ -700,13 +726,14 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       parentMessageEl.appendChild(bar);
     }
 
-    async function sendToDeepSeekAI(userText) {
+    async function sendToDeepSeekAI(userText, options = {}) {
       showTypingIndicator();
 
       ebookState.lastReasoningGenerated = null;
 
       // zbuduj pełne messages dla DeepSeek API
       const apiHistory = conversationContext.fullHistory.map(m => ({ role: m.role, content: m.content }));
+      const attachmentMessages = buildAttachmentContextMessages();
       const messages = [
         { role: "system", content: conversationContext.coreInstructions },
         { role: "system", content:
@@ -716,10 +743,19 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
            • currentChapter=${ebookState.currentChapter}
            • totalChapters=${ebookState.totalChapters ?? 'unknown'}
            • PAMIĘTAJ o formacie <FILE name="...">...</FILE>.`
-        },
-        ...apiHistory,
-        { role: "user", content: userText }
+        }
       ];
+
+      if (knowledgeSystemMessage) {
+        messages.push({ role: 'system', content: knowledgeSystemMessage });
+      }
+
+      if (attachmentMessages.length) {
+        messages.push(...attachmentMessages);
+      }
+
+      messages.push(...apiHistory);
+      messages.push({ role: "user", content: userText });
 
       try {
         const data = await callDeepSeek(messages);
@@ -815,7 +851,10 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
               onClick: async () => {
                 const notes = prompt("Co poprawić w spisie treści?");
                 if (!notes) return;
-                await sendToDeepSeekAI(`Popraw spis treści wg wskazówek: ${notes}. Zwróć TYLKO plik <FILE name="spis_tresci.txt">…</FILE> oraz linię __CHAPTERS_COUNT__=N.`);
+                await sendToDeepSeekAI(
+                  `Popraw spis treści wg wskazówek: ${notes}. Zwróć TYLKO plik <FILE name="spis_tresci.txt">…</FILE> oraz linię __CHAPTERS_COUNT__=N.`,
+                  { forceKnowledge: true, knowledgeQuery: 'spis treści ebook marketingowy' }
+                );
               }
             }
           ]);
@@ -996,6 +1035,23 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       this.style.height = 'auto';
       this.style.height = (this.scrollHeight) + 'px';
     });
+
+    if (knowledgeUploadBtn && knowledgeFileInput) {
+      knowledgeUploadBtn.addEventListener('click', () => knowledgeFileInput.click());
+      knowledgeFileInput.addEventListener('change', handleKnowledgeFilesSelected);
+    }
+    if (knowledgeAttachmentsList) {
+      knowledgeAttachmentsList.addEventListener('click', (event) => {
+        const removeBtn = event.target.closest('.knowledge-attachment-remove');
+        if (!removeBtn) return;
+        const { attachmentId } = removeBtn.dataset;
+        if (attachmentId) {
+          removeKnowledgeAttachment(attachmentId);
+        }
+      });
+    }
+
+    renderKnowledgeBaseAttachments();
 
     document.addEventListener('DOMContentLoaded', () => {
       startNewChat();

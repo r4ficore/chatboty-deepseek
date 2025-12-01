@@ -1,0 +1,1193 @@
+
+<!DOCTYPE html>
+<html lang="pl" class="scroll-smooth">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Enigma AI | Oferta Specjalna</title>
+        <meta name="description" content="Enigma AI - Zintegrowany system sztucznej inteligencji do budowy i skalowania biznesu.">
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <!-- Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            gold: '#d6b376',
+                            'gold-dim': '#aa8c55',
+                            'gold-dark': '#8a7040',
+                            coal: '#050505',
+                            surface: '#0f0f0f',
+                            glass: 'rgba(255, 255, 255, 0.03)',
+                            'glass-hover': 'rgba(255, 255, 255, 0.08)',
+                            mist: '#9CA3AF',
+                        },
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                            display: ['Space Grotesk', 'sans-serif'],
+                            mono: ['JetBrains Mono', 'monospace']
+                        },
+                        backgroundImage: {
+                            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                            'shine': 'linear-gradient(45deg, transparent 25%, rgba(214,179,118,0.1) 50%, transparent 75%)',
+                            'gold-gradient': 'linear-gradient(135deg, #d6b376 0%, #aa8c55 100%)'
+                        },
+                        animation: {
+                            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                            'float': 'float 6s ease-in-out infinite',
+                            'shine': 'shine 4s infinite linear'
+                        },
+                        keyframes: {
+                            float: {
+                                '0%, 100%': { transform: 'translateY(0)' },
+                                '50%': { transform: 'translateY(-10px)' },
+                            },
+                            shine: {
+                                '0%': { backgroundPosition: '200% 0' },
+                                '100%': { backgroundPosition: '-200% 0' }
+                            }
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <style>
+            body {
+                background-color: #050505;
+                color: #e5e7eb;
+                overflow-x: hidden;
+            }
+
+            /* Grain Overlay */
+            .grain {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                pointer-events: none; z-index: 0; opacity: 0.04;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+            }
+
+            /* Glow Effects */
+            .glow-text {
+                text-shadow: 0 0 20px rgba(214, 179, 118, 0.3);
+            }
+            .glow-box {
+                box-shadow: 0 0 40px -10px rgba(214, 179, 118, 0.1);
+            }
+
+            /* 3D Perspective for Dashboard */
+            .perspective-container {
+                perspective: 2000px;
+            }
+            .tilted-dashboard {
+                transform: rotateX(20deg) scale(0.9);
+                transform-style: preserve-3d;
+                transition: transform 0.5s ease-out;
+                box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8), 0 0 30px rgba(214,179,118,0.15);
+            }
+            .tilted-dashboard:hover {
+                transform: rotateX(5deg) scale(0.95);
+            }
+
+            /* Tech Borders */
+            .tech-border {
+                position: relative;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(15, 15, 15, 0.6);
+                backdrop-filter: blur(10px);
+            }
+            .tech-border::before {
+                content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                border-radius: inherit; padding: 1px;
+                background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+            }
+
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: #050505; }
+            ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+            ::-webkit-scrollbar-thumb:hover { background: #d6b376; }
+
+            .text-gradient {
+                background: linear-gradient(to right, #d6b376, #fff8e7, #d6b376);
+                -webkit-background-clip: text;
+                color: transparent;
+                background-size: 200% auto;
+                animation: shine 5s linear infinite;
+            }
+
+            /* Grid Lines Background */
+            .grid-bg {
+                background-size: 40px 40px;
+                background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+                mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+            }
+
+            /* Bento Grid Card Hover */
+            .bento-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .bento-card:hover {
+                border-color: rgba(214, 179, 118, 0.3);
+                box-shadow: 0 0 30px -5px rgba(214, 179, 118, 0.1);
+                transform: translateY(-2px);
+            }
+            .bento-card:hover .icon-glow {
+                color: #d6b376;
+                filter: drop-shadow(0 0 8px rgba(214,179,118,0.5));
+            }
+
+            /* Senja Embed Customization */
+            .senja-embed {
+                border-radius: 1rem;
+                overflow: hidden;
+            }
+
+            /* Profile Card Scan Effect */
+            .profile-scan::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background: #d6b376;
+                box-shadow: 0 0 10px #d6b376;
+                opacity: 0;
+                animation: scan 3s ease-in-out infinite;
+            }
+            .group:hover .profile-scan::after {
+                opacity: 0.5;
+            }
+            @keyframes scan {
+                0% { top: 0; }
+                50% { top: 100%; }
+                100% { top: 0; }
+            }
+
+            /* FAQ Accordion Styles */
+            .faq-content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.4s ease-out;
+            }
+            .faq-item.active .faq-content {
+                max-height: 200px; /* Approx height */
+                transition: max-height 0.5s ease-in;
+            }
+            .faq-item.active .faq-icon {
+                transform: rotate(180deg);
+                color: #d6b376;
+            }
+
+            /* --- NEW PREMIUM STICKY CTA STYLES --- */
+            .sticky-cta-container {
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%) translateY(100px); /* Hidden initially */
+                width: 90%;
+                max-width: 500px;
+                z-index: 9999;
+                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy enter */
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .sticky-cta-container.visible {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+
+            .sticky-pill {
+                background: rgba(10, 10, 10, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(214, 179, 118, 0.3);
+                border-radius: 100px;
+                padding: 8px 8px 8px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8), 0 4px 12px rgba(214, 179, 118, 0.1);
+            }
+
+            .sticky-text {
+                font-family: 'Space Grotesk', sans-serif;
+                font-weight: 600;
+                font-size: 15px;
+                color: #e5e7eb;
+            }
+
+            .sticky-button {
+                background: linear-gradient(135deg, #d6b376 0%, #aa8c55 100%);
+                color: #050505;
+                font-weight: 700;
+                padding: 10px 20px;
+                border-radius: 100px;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(214, 179, 118, 0.3);
+            }
+
+            .sticky-button:hover {
+                transform: scale(1.05);
+                box-shadow: 0 6px 20px rgba(214, 179, 118, 0.5);
+                color: black;
+            }
+        </style>
+    </head>
+    <body class="antialiased selection:bg-gold selection:text-black">
+
+        <!-- Background Elements -->
+        <div class="grain"></div>
+        <div class="fixed inset-0 grid-bg z-0 pointer-events-none"></div>
+        <div class="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-gold opacity-[0.03] blur-[120px] rounded-full z-0 pointer-events-none"></div>
+        <div class="fixed bottom-[-10%] right-[10%] w-[400px] h-[400px] bg-purple-900 opacity-[0.03] blur-[120px] rounded-full z-0 pointer-events-none"></div>
+
+        <!-- Navigation -->
+        <nav class="fixed top-0 left-0 right-0 z-50 p-6 flex justify-center">
+            <div class="tech-border rounded-full px-6 py-3 flex items-center justify-between gap-8 max-w-4xl w-full shadow-2xl bg-[#050505]/80">
+                <div class="flex items-center gap-3">
+                    <span class="font-display font-bold tracking-wider text-sm">ENIGMA <span class="text-gold">AI</span></span>
+                </div>
+
+                <!-- ZMIANA: LICZNIK W MIEJSCU PRZYCISKU (ZAWSZE WIDOCZNY) -->
+                <div class="flex items-center gap-2 font-mono text-gold bg-gold/10 border border-gold/20 px-4 py-2 rounded-full text-xs shadow-[0_0_15px_rgba(214,179,118,0.15)]">
+                    <span class="text-mist uppercase text-[10px] tracking-wide mr-1 hidden sm:inline">Do zakończenia:</span>
+                    <span class="font-bold tracking-widest"><span id="d">00</span>d <span id="h">00</span>h <span id="m">00</span>m <span id="s">00</span>s</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <main class="relative z-10 pt-32 pb-20 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col items-center text-center">
+
+                <!-- Status Badge -->
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 animate-fade-in">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-[10px] font-mono text-mist tracking-widest uppercase">Twój System Operacyjny Biznesu</span>
+                </div>
+
+                <!-- Headline -->
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-tight tracking-tight mb-6 max-w-5xl">
+                    Nie potrzebujesz <br> <span class="text-gradient scramble-text" data-text="Więcej Wiedzy">Więcej Wiedzy</span>.
+                    <br> Potrzebujesz <span class="text-white underline decoration-gold/50 decoration-2 underline-offset-8">Struktury</span>.
+                </h1>
+
+                <p class="text-lg md:text-xl text-mist max-w-2xl mb-8 font-light leading-relaxed">
+                    Zintegrowany ekosystem AI, który łączy strategię, content, produkty i sprzedaż w jeden, logiczny proces. Buduj i skaluj biznes bez chaosu.
+                </p>
+
+                <!-- Hero CTA -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-16 animate-fade-in" style="animation-delay: 0.2s;">
+                    <a href="#pricing" class="bg-gold hover:bg-white text-black font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(214,179,118,0.3)] hover:shadow-[0_0_30px_rgba(214,179,118,0.5)] transition-all duration-300 uppercase tracking-wide text-sm flex items-center justify-center gap-2">
+                        Rozpocznij Transformację <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a href="#modules" class="border border-white/20 hover:border-gold text-mist hover:text-gold font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm uppercase tracking-wide bg-white/5 hover:bg-white/10">
+                        Poznaj Architekturę
+                    </a>
+                </div>
+
+                <!-- 3D Dashboard Preview -->
+                <div class="perspective-container w-full max-w-5xl mx-auto mb-24 relative group">
+                    <!-- Dashboard Container -->
+                    <div class="tilted-dashboard bg-[#0a0a0a] rounded-xl border border-white/10 overflow-hidden relative">
+                        <!-- Header Bar Simulator -->
+                        <div class="h-8 bg-[#151515] border-b border-white/5 flex items-center px-4 gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
+                            <div class="ml-auto text-[10px] font-mono text-gray-600">ENIGMA_DASHBOARD.EXE</div>
+                        </div>
+                        <!-- Image Placeholder -->
+                        <img src="https://enigmaai.club/doc/screen_08.23.17.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDEyMDAgODAwIj48cmVjdCB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxMTEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyIgZm9udC1zaXplPSI0MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSI+WyBWSVNVQUxJWkFDSkEgREFTSEJPQVJEVSBdPC90ZXh0Pjwvc3ZnPg=='" alt="Enigma Dashboard" class="w-full h-auto object-cover opacity-90">
+
+                        <!-- Overlay Gradient -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                    </div>
+
+                    <!-- Glow under dashboard -->
+                    <div class="absolute -inset-4 bg-gold/20 blur-[50px] -z-10 opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                </div>
+
+                <!-- Counters -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12 w-full max-w-4xl border-t border-white/10 pt-8">
+                    <div class="text-center">
+                        <div class="text-3xl font-display font-bold text-white mb-1">5</div>
+                        <div class="text-[10px] font-mono text-gold uppercase tracking-widest">Warstw Wzrostu</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-display font-bold text-white mb-1">20+</div>
+                        <div class="text-[10px] font-mono text-gold uppercase tracking-widest">Agentów AI</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-display font-bold text-white mb-1">∞</div>
+                        <div class="text-[10px] font-mono text-gold uppercase tracking-widest">Pamięć Context</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-display font-bold text-white mb-1">PL</div>
+                        <div class="text-[10px] font-mono text-gold uppercase tracking-widest">Język Systemu</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- About Section (Manifesto) -->
+        <section id="system" class="py-24 relative border-t border-white/5 bg-black">
+            <div class="max-w-5xl mx-auto px-4">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-display font-bold mb-6 text-white">
+                            To nie jest kolejny czat. <br>
+                            To <span class="text-gold">Cyfrowy Ekosystem</span>.
+                        </h2>
+                        <p class="text-mist mb-6 leading-relaxed">
+                            Enigma AI to zintegrowany system sztucznej inteligencji dla twórców i przedsiębiorców. Łączy 5 kluczowych warstw wzrostu biznesu — od pomysłu, przez strategię, aż po skalowanie.
+                        </p>
+                        <p class="text-mist mb-8 leading-relaxed">
+                            W odróżnieniu od standardowych narzędzi, Enigma nie działa „na pytania”, tylko na <strong>procesach</strong>. Prowadzi Cię krok po kroku przez logiczną ścieżkę tworzenia biznesu.
+                        </p>
+
+                        <ul class="space-y-4 font-mono text-xs md:text-sm text-gray-300">
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-gold"></i> Twój doradca strategiczny (CORE)
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-gold"></i> Architekt modelu biznesowego (VISION)
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-gold"></i> Copywriter i Storyteller (STORY)
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-gold"></i> Twórca produktów i ofert (VALUE)
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-gold"></i> Growth-Manager (SCALE)
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="relative">
+                        <div class="tech-border p-8 rounded-xl bg-surface/50">
+                            <div class="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                <span class="ml-auto font-mono text-[10px] text-gray-500">SYSTEM_LOG_01</span>
+                            </div>
+                            <div class="font-mono text-xs space-y-3">
+                                <div class="text-gray-500">> Inicjowanie protokołu biznesowego...</div>
+                                <div class="text-green-400">> Wykryto chaos w strategii.</div>
+                                <div class="text-gray-500">> Uruchamianie Enigma Nexus...</div>
+                                <div class="pl-4 border-l border-white/10 text-gray-400">
+                                    Analiza rynku: <span class="text-white">Zakończona</span><br>
+                                    Profil Klienta: <span class="text-white">Zdefiniowany</span><br>
+                                    Strategia Contentu: <span class="text-white">Wygenerowana</span>
+                                </div>
+                                <div class="text-gold animate-pulse">> Gotowy do skalowania.</div>
+                            </div>
+                        </div>
+                        <!-- Decoration -->
+                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-gold/10 blur-3xl rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modules Section (Bento Grid) -->
+        <section id="modules" class="py-24 max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="text-gold font-mono text-xs tracking-[0.3em] uppercase">Architektura Funkcjonalna</span>
+                <h2 class="text-4xl md:text-5xl font-display font-bold mt-4 mb-6">5 Filarów <span class="text-white/50">Mocy</span></h2>
+                <p class="text-mist max-w-2xl mx-auto">Każdy moduł to wyspecjalizowany zespół ekspertów pod jednym dachem. Dane przepływają między nimi automatycznie.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-6">
+                <!-- CORE (Large) -->
+                <div class="lg:col-span-8 tech-border rounded-2xl p-8 bento-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-brain text-9xl text-gold"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-gold/10 rounded-lg flex items-center justify-center mb-6 border border-gold/20 icon-glow transition-colors">
+                            <i class="fa-solid fa-brain text-gold text-xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white mb-2">ENIGMA CORE</h3>
+                        <p class="text-gold font-mono text-xs mb-4 uppercase tracking-wider">Mózg Operacyjny</p>
+                        <p class="text-mist text-sm leading-relaxed mb-6 max-w-md">Punkt startowy i główny interfejs. Meta-asystent, który odpowiada za rozumienie kontekstu i estetykę.</p>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-white/5 p-3 rounded border border-white/5">
+                                <div class="font-bold text-white text-sm mb-1">Enigma GPT-5</div>
+                                <div class="text-xs text-gray-500">Strateg, analityk i doradca ogólny.</div>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded border border-white/5">
+                                <div class="font-bold text-white text-sm mb-1">Enigma Visual</div>
+                                <div class="text-xs text-gray-500">DeepSeek + NanoBanana. Grafiki, mockupy, brandy.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- VISION -->
+                <div class="lg:col-span-4 tech-border rounded-2xl p-8 bento-card relative group">
+                    <div class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-6 border border-purple-500/20 icon-glow">
+                        <i class="fa-solid fa-eye text-purple-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-1">ENIGMA VISION</h3>
+                    <p class="text-purple-400 font-mono text-xs mb-4 uppercase">Modelowanie Biznesu</p>
+                    <ul class="space-y-2 text-xs text-mist font-mono">
+                        <li class="flex items-center gap-2"><span class="text-purple-500">></span> The Monetizer</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">></span> The Audience</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">></span> Client Avatar</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">></span> The Needsmith</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">></span> Brand Forge</li>
+                    </ul>
+                </div>
+                <!-- STORY -->
+                <div class="lg:col-span-4 tech-border rounded-2xl p-8 bento-card relative group">
+                    <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 border border-blue-500/20 icon-glow">
+                        <i class="fa-solid fa-pen-nib text-blue-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-1">ENIGMA STORY</h3>
+                    <p class="text-blue-400 font-mono text-xs mb-4 uppercase">Komunikacja & Content</p>
+                    <ul class="space-y-2 text-xs text-mist font-mono">
+                        <li class="flex items-center gap-2"><span class="text-blue-500">></span> Unlimited Ideas</li>
+                        <li class="flex items-center gap-2"><span class="text-blue-500">></span> SEO CopyWriter</li>
+                        <li class="flex items-center gap-2"><span class="text-blue-500">></span> Posts/ Reels/ Scripts</li>
+                        <li class="flex items-center gap-2"><span class="text-blue-500">></span> Stories Planner</li>
+                        <li class="flex items-center gap-2"><span class="text-blue-500">></span> The Human Touch</li>
+                    </ul>
+                </div>
+                <!-- VALUE -->
+                <div class="lg:col-span-4 tech-border rounded-2xl p-8 bento-card relative group">
+                    <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-6 border border-green-500/20 icon-glow">
+                        <i class="fa-solid fa-gem text-green-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-1">ENIGMA VALUE</h3>
+                    <p class="text-green-400 font-mono text-xs mb-4 uppercase">Produkty & Oferta</p>
+                    <ul class="space-y-2 text-xs text-mist font-mono">
+                        <li class="flex items-center gap-2"><span class="text-green-500">></span> The Magnet Leader</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">></span> Consult Programator</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">></span> Ebook CopyWriter</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">></span> AI Course Creator</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">></span> The Perswadron</li>
+                    </ul>
+                </div>
+                <!-- SCALE -->
+                <div class="lg:col-span-4 tech-border rounded-2xl p-8 bento-card relative group">
+                    <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mb-6 border border-red-500/20 icon-glow">
+                        <i class="fa-solid fa-chart-line text-red-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-1">ENIGMA SCALE</h3>
+                    <p class="text-red-400 font-mono text-xs mb-4 uppercase">Wzrost & Automatyzacja</p>
+                    <ul class="space-y-2 text-xs text-mist font-mono">
+                        <li class="flex items-center gap-2"><span class="text-red-500">></span> Business Titan</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">></span> Infinite Creativity</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">></span> Funnel Architect</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">></span> MetaMind Studio</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">></span> LifeTracker OS</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- MIDDLE IMPULSE CTA -->
+        <section class="py-12 bg-gold/5 border-y border-gold/10 relative overflow-hidden">
+            <div class="absolute inset-0 bg-shine opacity-10 pointer-events-none"></div>
+            <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                <div class="text-center md:text-left">
+                    <h3 class="text-2xl font-display font-bold text-white mb-1">Widzisz potencjał?</h3>
+                    <p class="text-sm text-mist">Nie musisz czekać do końca strony. Dołącz do elity już teraz.</p>
+                </div>
+                <a href="#pricing" class="bg-gold hover:bg-white text-black font-bold py-3 px-8 rounded-full shadow-glow-box transition-all duration-300 uppercase tracking-wide text-xs flex-shrink-0">
+                    Uzyskaj Dostęp Natychmiastowy
+                </a>
+            </div>
+        </section>
+
+        <!-- USP Section (Terminal Comparison) -->
+        <section class="py-24 bg-surface/30 border-b border-white/5 relative overflow-hidden">
+            <div class="absolute inset-0 grid-bg opacity-50"></div>
+            <div class="max-w-6xl mx-auto px-4 relative z-10">
+                <div class="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                    <!-- Problem -->
+                    <div class="bg-[#0a0a0a] p-8 md:p-12 border-r border-white/5 font-mono">
+                        <h3 class="text-red-500 font-bold mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-xmark"></i> SYSTEM ERROR (STARY MODEL)
+                        </h3>
+                        <ul class="space-y-4 text-sm text-gray-500">
+                            <li class="flex items-start gap-3"><span class="text-red-900 mt-1">x</span> Brak modelu biznesowego. Chaos.</li>
+                            <li class="flex items-start gap-3"><span class="text-red-900 mt-1">x</span> Niespójna komunikacja marki.</li>
+                            <li class="flex items-start gap-3"><span class="text-red-900 mt-1">x</span> Brak produktów cyfrowych.</li>
+                            <li class="flex items-start gap-3"><span class="text-red-900 mt-1">x</span> Nadmiar aplikacji (Subskrypcjoza).</li>
+                        </ul>
+                    </div>
+                    <!-- Solution -->
+                    <div class="bg-[#0f0f0f] p-8 md:p-12 relative overflow-hidden font-mono">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-3xl rounded-full"></div>
+                        <h3 class="text-green-400 font-bold mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> SYSTEM PATCHED (ENIGMA)
+                        </h3>
+                        <ul class="space-y-4 text-sm text-gray-300">
+                            <li class="flex items-start gap-3"><span class="text-green-500 mt-1">></span> Gotowy plan zarabiania.</li>
+                            <li class="flex items-start gap-3"><span class="text-green-500 mt-1">></span> Spójny system treści.</li>
+                            <li class="flex items-start gap-3"><span class="text-green-500 mt-1">></span> Gotowe Ebooki i Kursy w minuty.</li>
+                            <li class="flex items-start gap-3"><span class="text-green-500 mt-1">></span> All-in-One Dashboard.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reviews Section (Senja Embed) -->
+        <section id="reviews" class="py-24 bg-black relative overflow-hidden border-t border-white/5">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <span class="text-gold font-mono text-xs tracking-[0.3em] uppercase animate-pulse-slow">Status Operacyjny</span>
+                    <h2 class="text-3xl md:text-4xl font-display font-bold mt-4 mb-6 text-white">
+                        Raporty z <span class="text-white/50">Pola Walki</span>
+                    </h2>
+                    <p class="text-mist max-w-2xl mx-auto">Zobacz, jak inni operatorzy systemu wykorzystują Enigmę do budowania przewagi rynkowej.</p>
+                </div>
+
+                <!-- Widget Container -->
+                <div class="relative z-10 bg-surface/20 rounded-2xl p-4 md:p-8 border border-white/5">
+                    <script src="https://widget.senja.io/widget/0d757e02-986e-4c5f-b35b-bd894e314c2e/platform.js" type="text/javascript" async></script>
+                    <div class="senja-embed" data-id="0d757e02-986e-4c5f-b35b-bd894e314c2e" data-mode="shadow" data-lazyload="false" style="display: block; width: 100%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BONUSES SECTION -->
+        <section id="bonuses" class="py-24 bg-black border-t border-white/5 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 relative z-10">
+                <div class="text-center mb-16">
+                    <span class="text-gold font-mono text-xs tracking-[0.3em] uppercase">Totalna Dominacja</span>
+                    <h2 class="text-3xl md:text-4xl font-display font-bold mt-4 text-white">
+                        Więcej niż <span class="text-white/50">Platforma</span>
+                    </h2>
+                    <p class="text-mist max-w-2xl mx-auto">Enigma to nie tylko soft. To środowisko ciągłego wzrostu. W cenie subskrypcji otrzymujesz pełen pakiet wsparcia.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Card 1: Baza Promptów -->
+                    <div class="group tech-border rounded-2xl p-6 bg-surface/20 hover:bg-surface/40 transition-all">
+                        <div class="w-12 h-12 bg-gold/10 rounded-lg flex items-center justify-center mb-4 text-gold group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-layer-group text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Baza Promptów</h3>
+                        <p class="text-xs text-mist leading-relaxed">Gotowe, przetestowane polecenia do każdego modelu. Kopiuj, wklej i generuj wyniki bez eksperymentowania.</p>
+                    </div>
+
+                    <!-- Card 2: Warsztaty Zoom -->
+                    <div class="group tech-border rounded-2xl p-6 bg-surface/20 hover:bg-surface/40 transition-all">
+                        <div class="w-12 h-12 bg-gold/10 rounded-lg flex items-center justify-center mb-4 text-gold group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-video text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Live Warsztaty</h3>
+                        <p class="text-xs text-mist leading-relaxed">Cotygodniowe spotkania na Zoom. Analiza Twoich przypadków, Q&A i nowe strategie na żywo.</p>
+                    </div>
+
+                    <!-- Card 3: Społeczność Telegram -->
+                    <div class="group tech-border rounded-2xl p-6 bg-surface/20 hover:bg-surface/40 transition-all">
+                        <div class="w-12 h-12 bg-gold/10 rounded-lg flex items-center justify-center mb-4 text-gold group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-telegram text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Społeczność VIP</h3>
+                        <p class="text-xs text-mist leading-relaxed">Zamknięta grupa na Telegramie. Networking z innymi operatorami systemu, wymiana wiedzy i wsparcie 24/7.</p>
+                    </div>
+
+                    <!-- Card 4: Nielimitowane Czaty -->
+                    <div class="group tech-border rounded-2xl p-6 bg-surface/20 hover:bg-surface/40 transition-all">
+                        <div class="w-12 h-12 bg-gold/10 rounded-lg flex items-center justify-center mb-4 text-gold group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-infinity text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">No Limits AI</h3>
+                        <p class="text-xs text-mist leading-relaxed">Brak limitów na konwersacje. Twoi agenci AI pracują dla Ciebie bez przerwy, kiedy tylko ich potrzebujesz.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- ZMODYFIKOWANA SEKCJA CENNIKA (PRICING) -->
+        <!-- ============================================== -->
+        <section id="pricing" class="pt-32 pb-12 max-w-6xl mx-auto px-4 relative">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">Wybierz Swój Poziom</h2>
+                <p class="text-mist">Dołącz do Enigmy i rozpocznij transformację. Wybierz wariant dopasowany do Twoich potrzeb.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch relative z-10">
+
+                <!-- OPTION 1: STANDARD (1499 PLN) -->
+                <div class="tech-border rounded-3xl p-8 bg-[#0d0d0d] relative overflow-hidden shadow-lg transition-all hover:-translate-y-1 duration-500 flex flex-col">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-display font-bold text-white">CORE ACCESS</h3>
+                        <div class="text-gray-500 font-mono text-xs mt-1 tracking-widest uppercase">Standard License</div>
+                    </div>
+                    <div class="mb-8">
+                        <div class="text-4xl font-bold text-white tracking-tight">1 499 PLN</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">ROCZNY DOSTĘP</div>
+                    </div>
+                    <div class="flex-grow">
+                        <ul class="space-y-4 text-sm text-gray-300 mb-8">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-gold"></i> Pełen system Enigma AI (CORE → SCALE)</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-gold"></i> 37 Promptów Premium</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-gold"></i> Tools Pack & Aktualizacje</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-video text-gold"></i> Dostęp do nagrań warsztatowych</li>
+                            <li class="flex items-center gap-3 opacity-40"><i class="fa-solid fa-xmark text-gray-500 ml-1 mr-1"></i> Brak Certyfikatu</li>
+                            <li class="flex items-center gap-3 opacity-40"><i class="fa-solid fa-xmark text-gray-500 ml-1 mr-1"></i> Brak zadań wdrożeniowych</li>
+                        </ul>
+                    </div>
+                    <!-- CTA -->
+                    <a href="https://secure.tpay.com/?h=bc82c7dffd23cf3f3623776480c5437d804864de" class="w-full border border-white/20 hover:border-gold text-white hover:text-gold font-medium py-4 px-8 rounded-lg text-center transition-all duration-300 text-sm uppercase tracking-wide bg-white/5 hover:bg-white/10">
+                        Wybieram Standard
+                    </a>
+                </div>
+
+                <!-- OPTION 2: PROGRAM WDROŻENIOWY (1999 PLN) - NEW -->
+                <div class="tech-border rounded-3xl p-1 bg-gradient-to-b from-gold/40 to-transparent relative overflow-hidden shadow-glow-box transition-all hover:scale-[1.01] duration-500 flex flex-col">
+                    <!-- Badge -->
+                    <div class="absolute top-0 right-0 bg-gold text-black font-bold text-[10px] px-3 py-1 font-mono uppercase rounded-bl-lg z-20">
+                        PREMIERA
+                    </div>
+                    <div class="bg-[#080808] h-full rounded-[22px] p-7 flex flex-col relative z-10">
+                        <!-- Shine -->
+                        <div class="absolute inset-0 bg-shine opacity-20 pointer-events-none"></div>
+
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gold">PROGRAM WDROŻENIOWY</h3>
+                            <div class="text-gold font-mono text-xs mt-1 tracking-widest uppercase">6-Tygodniowy Proces</div>
+                        </div>
+
+                        <!-- ZMIANA: MARKETINGOWY LIMIT MIEJSC -->
+                        <div class="inline-flex items-center gap-2 px-2 py-1.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-mono mb-4 w-fit">
+                            <span class="relative flex h-1.5 w-1.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                            </span>
+                            Limit: Max 25 Osób
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-baseline gap-3">
+                                <!-- ZMIANA CENY -->
+                                <div class="text-4xl font-bold text-gold tracking-tight">1 999 PLN</div>
+                                <div class="text-lg text-gray-500 line-through decoration-red-500/50">3 999 PLN</div>
+                            </div>
+                            <div class="text-xs text-gold/60 font-mono mt-1">CENA DLA UCZESTNIKÓW WEBINARU</div>
+                        </div>
+
+                        <!-- Payment Methods Strip (Mini) -->
+                        <div class="flex flex-wrap gap-2 mb-6 mt-2 text-[10px] text-mist font-mono border-t border-white/10 pt-3">
+                            <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">Raty 0%</span>
+                            <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">PayPo</span>
+                            <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">BLIK</span>
+                            <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">Faktura VAT</span>
+                        </div>
+
+                        <div class="flex-grow">
+                            <ul class="space-y-4 text-sm text-white mb-8">
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-check text-gold"></i> <strong>WSZYSTKO</strong> co w pakiecie Standard</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-users-gear text-purple-400"></i> 6 Tygodni prowadzenia przez Ekspertów</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-list-check text-purple-400"></i> Cotygodniowe zadania i feedback</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-certificate text-purple-400"></i> <strong>Certyfikat (PDF + Fizyczny)</strong></li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-rocket text-purple-400"></i> Praca na Twoim realnym projekcie</li>
+                            </ul>
+                        </div>
+                        <!-- CTA UPDATE: NOWY LINK + CENA -->
+                        <a href="https://secure.tpay.com/?h=4d89bae202e0b3fcc010aa7c8f2654b0181a1ccc" class="w-full bg-gold hover:bg-white text-black font-bold py-4 px-8 rounded-lg text-center transition-all duration-300 shadow-[0_0_20px_rgba(214,179,118,0.4)] hover:shadow-[0_0_40px_rgba(214,179,118,0.6)] uppercase tracking-wide text-sm mb-3">
+                            Dołącz do Programu
+                        </a>
+                        <div class="text-center">
+                            <span class="text-[10px] text-mist">Oszczędzasz 2000 PLN w tej edycji</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Payment Methods Strip -->
+            <div class="mt-12 pt-8 border-t border-white/5 flex flex-wrap justify-center items-center gap-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                <div class="flex items-center gap-2 text-mist font-mono text-xs"><i class="fa-regular fa-credit-card text-lg"></i> Karty Płatnicze</div>
+                <div class="flex items-center gap-2 text-mist font-mono text-xs"><i class="fa-brands fa-google-pay text-lg"></i> Google / Apple Pay</div>
+                <div class="flex items-center gap-2 text-mist font-mono text-xs"><i class="fa-solid fa-building-columns text-lg"></i> Przelew</div>
+                <div class="flex items-center gap-2 text-mist font-mono text-xs"><span class="font-bold border border-current px-1 rounded">BLIK</span></div>
+                <div class="flex items-center gap-2 text-mist font-mono text-xs"><span class="font-bold">PayPo</span> (Kup teraz, zapłać za 30 dni)</div>
+                <div class="flex items-center gap-2 text-gold font-mono text-xs"><i class="fa-solid fa-percent"></i> Raty 0% (3-10 rat)</div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- NOWA SEKCJA: DETALE PROGRAMU WDROŻENIOWEGO -->
+        <!-- ============================================== -->
+        <section id="program-details" class="py-24 bg-[#080808] relative border-y border-white/5 overflow-hidden">
+            <!-- Background Decor -->
+            <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-900/10 blur-[100px] rounded-full pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gold/5 blur-[100px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-6xl mx-auto px-4 relative z-10">
+
+                <!-- Header -->
+                <div class="text-center max-w-3xl mx-auto mb-20">
+                    <span class="text-gold font-mono text-xs tracking-[0.3em] uppercase animate-pulse-slow">Premium Experience</span>
+                    <h2 class="text-3xl md:text-5xl font-display font-bold mt-4 mb-6 text-white">
+                        6 Tygodni do <span class="text-gradient">Kompletnego Systemu</span>
+                    </h2>
+                    <p class="text-mist text-lg leading-relaxed">
+                        To nie jest kolejny kurs do obejrzenia "kiedyś". To <strong>Program Wdrożeniowy</strong>.
+                        Przez 6 tygodni pracujesz ramię w ramię z ekspertami nad Twoim realnym projektem.
+                        Wychodzisz z gotowym systemem, nie z notatkami.
+                    </p>
+                </div>
+
+                <!-- 1. TIMELINE -->
+                <div class="grid md:grid-cols-12 gap-12 items-start mb-32">
+                    <div class="md:col-span-5 sticky top-24">
+                        <h3 class="text-2xl font-display font-bold text-white mb-6">Proces Transformacji</h3>
+                        <p class="text-mist text-sm mb-8">Każdy tydzień to konkretny "Kamień Milowy", który musisz osiągnąć. My dostarczamy narzędzia, wiedzę i korektę kursu.</p>
+
+                        <div class="tech-border p-6 rounded-xl bg-surface/30 mb-6">
+                            <h4 class="text-gold font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-trophy"></i> Cel Programu:</h4>
+                            <p class="text-xs text-gray-300 leading-relaxed">
+                                Zaprojektowanie, zbudowanie i uruchomienie kompletnego ekosystemu biznesowego opartego o AI (Strategia + Produkt + Lejek).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-7">
+                        <div class="relative border-l border-white/10 ml-3 space-y-12 pl-12 py-2">
+
+                            <!-- Week 1 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-gold border-4 border-[#080808] shadow-[0_0_15px_rgba(214,179,118,0.6)] group-hover:scale-150 transition-transform"></span>
+                                <div class="text-gold font-mono text-xs uppercase tracking-widest mb-1">Tydzień 1</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Fundamenty: Core & Vision</h4>
+                                <p class="text-sm text-gray-400">Instalacja środowiska pracy. Definiowanie misji, wizji i celów finansowych z agentami CORE.</p>
+                            </div>
+
+                            <!-- Week 2 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-white/20 border-4 border-[#080808] group-hover:bg-gold group-hover:shadow-[0_0_15px_rgba(214,179,118,0.6)] transition-all"></span>
+                                <div class="text-mist font-mono text-xs uppercase tracking-widest mb-1">Tydzień 2</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Avatar, Kierunek i Potrzeby</h4>
+                                <p class="text-sm text-gray-400">Deep Dive w Twojego klienta. Agent "The Needsmith" odkrywa ukryte pragnienia rynku, których nie widzi konkurencja.</p>
+                            </div>
+
+                            <!-- Week 3 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-white/20 border-4 border-[#080808] group-hover:bg-gold group-hover:shadow-[0_0_15px_rgba(214,179,118,0.6)] transition-all"></span>
+                                <div class="text-mist font-mono text-xs uppercase tracking-widest mb-1">Tydzień 3</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Content Engine</h4>
+                                <p class="text-sm text-gray-400">Budowa maszyny do treści. Tworzenie miesiąca contentu w 2 godziny. Spójny głos marki (Tone of Voice).</p>
+                            </div>
+
+                            <!-- Week 4 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-white/20 border-4 border-[#080808] group-hover:bg-gold group-hover:shadow-[0_0_15px_rgba(214,179,118,0.6)] transition-all"></span>
+                                <div class="text-mist font-mono text-xs uppercase tracking-widest mb-1">Tydzień 4</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Produkt & Oferta Nie Do Odrzucenia</h4>
+                                <p class="text-sm text-gray-400">Projektowanie produktu cyfrowego lub usługi high-ticket. Pakowanie tego w ofertę, która sprzedaje się sama.</p>
+                            </div>
+
+                            <!-- Week 5 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-white/20 border-4 border-[#080808] group-hover:bg-gold group-hover:shadow-[0_0_15px_rgba(214,179,118,0.6)] transition-all"></span>
+                                <div class="text-mist font-mono text-xs uppercase tracking-widest mb-1">Tydzień 5</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Lejki i Architektura Sprzedaży</h4>
+                                <p class="text-sm text-gray-400">Techniczne spięcie systemu. Landing Page, Email Marketing, Automatyzacja. Wszystko "No-Code".</p>
+                            </div>
+
+                            <!-- Week 6 -->
+                            <div class="relative group">
+                                <span class="absolute -left-[54px] top-1 w-3 h-3 rounded-full bg-white/20 border-4 border-[#080808] group-hover:bg-gold group-hover:shadow-[0_0_15px_rgba(214,179,118,0.6)] transition-all"></span>
+                                <div class="text-mist font-mono text-xs uppercase tracking-widest mb-1">Tydzień 6</div>
+                                <h4 class="text-xl font-bold text-white mb-2 group-hover:text-gold transition-colors">Konsultacje Eksperckie i Skalowanie</h4>
+                                <p class="text-sm text-gray-400">Finalny szlif. Sesje z ekspertami, feedback na żywo, planowanie kampanii reklamowej.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CERTIFICATE SECTION -->
+                <div class="tech-border rounded-3xl p-8 md:p-16 bg-gradient-to-br from-[#0d0d0d] to-black relative overflow-hidden mb-32 group">
+                    <div class="absolute top-0 right-0 w-full h-full bg-grid-bg opacity-20"></div>
+
+                    <div class="grid md:grid-cols-2 gap-12 items-center relative z-10">
+                        <div>
+                            <h3 class="text-3xl font-display font-bold text-white mb-4">
+                                Certyfikat <span class="text-gold">Applied AI in Business</span>
+                            </h3>
+                            <p class="text-mist mb-8 leading-relaxed">
+                                To nie jest "papierek za obecność". Certyfikat Enigma AI potwierdza realne umiejętności wdrożenia sztucznej inteligencji w procesy strategiczne, marketingowe i produktowe.
+                            </p>
+                            <ul class="space-y-4 font-mono text-sm text-gray-300 mb-8">
+                                <li class="flex items-center gap-3">
+                                    <i class="fa-solid fa-check-double text-gold"></i> Wersja PDF (LinkedIn ready)
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <i class="fa-solid fa-envelope-open-text text-gold"></i> <strong>Wersja Fizyczna</strong> wysyłana pocztą
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <i class="fa-solid fa-fingerprint text-gold"></i> Unikalny numer identyfikacyjny
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <i class="fa-solid fa-medal text-gold"></i> Złote tłoczenie i papier premium
+                                </li>
+                            </ul>
+                            <div class="inline-flex items-center gap-2 text-xs text-gold/60 border border-gold/20 px-3 py-1 rounded bg-gold/5">
+                                <i class="fa-solid fa-lock"></i> Dostępny tylko dla absolwentów Programu Wdrożeniowego
+                            </div>
+                        </div>
+
+                        <!-- CSS Certificate Mockup -->
+                        <div class="relative perspective-container">
+                            <div class="tilted-dashboard aspect-[1.414/1] bg-[#111] border-[8px] border-double border-[#333] p-8 shadow-2xl relative flex flex-col items-center justify-center text-center">
+                                <div class="absolute inset-2 border border-gold/30"></div>
+                                <div class="absolute top-8 left-0 right-0 flex justify-center">
+                                    <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center text-gold text-2xl"><i class="fa-solid fa-award"></i></div>
+                                </div>
+                                <div class="mt-8">
+                                    <h4 class="font-display font-bold text-2xl text-white uppercase tracking-widest mb-2">Certyfikat</h4>
+                                    <p class="font-mono text-[10px] text-gold uppercase tracking-[0.3em]">Ukończenia Programu Wdrożeniowego</p>
+                                </div>
+                                <div class="my-6 w-3/4 border-b border-white/10"></div>
+                                <div class="font-serif italic text-2xl text-white/90 mb-2">Twoje Imię i Nazwisko</div>
+                                <p class="text-[8px] text-gray-500 max-w-xs">Za skuteczne wdrożenie zintegrowanego systemu Enigma AI w strukturę biznesową oraz opanowanie 5 filarów architektury: Core, Vision, Story, Value, Scale.</p>
+                                <div class="mt-auto mb-4 flex justify-between w-full px-8 items-end">
+                                    <div class="text-left">
+                                        <div class="h-8 w-24 bg-white/5 mb-1"></div>
+                                        <div class="text-[6px] text-gray-600 uppercase">Podpis Instruktora</div>
+                                    </div>
+                                    <div class="w-12 h-12 border border-gold/30 rounded-full flex items-center justify-center opacity-50">
+                                        <i class="fa-solid fa-stamp text-gold text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. COMPARISON TABLE -->
+                <div class="mb-20">
+                    <div class="text-center mb-12">
+                        <h3 class="text-2xl font-display font-bold text-white">Wybierz swoją wersję systemu</h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <div class="min-w-[600px] tech-border rounded-2xl bg-[#0a0a0a] p-1">
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 text-sm font-bold text-white sticky top-0 bg-[#0a0a0a] z-20">
+                                <div class="col-span-1 flex items-center pl-4">FUNKCJONALNOŚĆ</div>
+                                <div class="col-span-1 text-center text-mist">STANDARD</div>
+                                <div class="col-span-1 text-center text-gold">PROGRAM WDROŻENIOWY</div>
+                            </div>
+
+                            <!-- Row -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center">
+                                <div class="col-span-1 text-sm text-gray-300 pl-4">Dostęp do Platformy Enigma AI</div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                            <!-- Row -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center">
+                                <div class="col-span-1 text-sm text-gray-300 pl-4">Baza 37 Promptów</div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                            <!-- Row -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center">
+                                <div class="col-span-1 text-sm text-gray-300 pl-4">Aktualizacje Systemu</div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                            <!-- Row (Diff) -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center bg-white/[0.02]">
+                                <div class="col-span-1 text-sm font-bold text-white pl-4">6 Tygodni Prowadzenia</div>
+                                <div class="col-span-1 text-center text-gray-600"><i class="fa-solid fa-xmark"></i></div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                            <!-- Row (Diff) -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center bg-white/[0.02]">
+                                <div class="col-span-1 text-sm font-bold text-white pl-4">Warsztaty Wdrożeniowe (Live)</div>
+                                <div class="col-span-1 text-center text-gray-600"><i class="fa-solid fa-xmark"></i></div>
+                                <div class="col-span-1 text-center text-green-500">6 Spotkań Live</div>
+                            </div>
+                            <!-- Row (Diff) -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center bg-white/[0.02]">
+                                <div class="col-span-1 text-sm font-bold text-white pl-4">Zadania Tygodniowe + Feedback</div>
+                                <div class="col-span-1 text-center text-gray-600"><i class="fa-solid fa-xmark"></i></div>
+                                <div class="col-span-1 text-center text-green-500"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                            <!-- Row (Diff) -->
+                            <div class="grid grid-cols-3 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center bg-white/[0.02]">
+                                <div class="col-span-1 text-sm font-bold text-white pl-4">Certyfikat (Fizyczny + PDF)</div>
+                                <div class="col-span-1 text-center text-gray-600"><i class="fa-solid fa-xmark"></i></div>
+                                <div class="col-span-1 text-center text-gold"><i class="fa-solid fa-award"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. FINAL CTA BUTTONS -->
+                <div class="flex flex-col md:flex-row justify-center gap-6 mt-16">
+                    <!-- CTA -->
+                    <a href="https://secure.tpay.com/?h=bc82c7dffd23cf3f3623776480c5437d804864de" class="border border-white/20 hover:border-white text-white font-bold py-4 px-10 rounded-full transition-all duration-300 uppercase tracking-wide text-sm text-center">
+                        Kup Standard - 1 499 zł
+                    </a>
+                    <!-- CTA UPDATE: NOWY LINK + CENA -->
+                    <a href="https://secure.tpay.com/?h=4d89bae202e0b3fcc010aa7c8f2654b0181a1ccc" class="bg-gold hover:bg-white text-black font-bold py-4 px-10 rounded-full shadow-[0_0_20px_rgba(214,179,118,0.3)] hover:shadow-[0_0_30px_rgba(214,179,118,0.5)] transition-all duration-300 uppercase tracking-wide text-sm text-center flex items-center justify-center gap-2">
+                        Dołącz do Programu - 1 999 zł <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="text-center mt-6 text-xs text-mist font-mono">
+                    <i class="fa-solid fa-shield-halved text-gold mr-1"></i> Gwarancja satysfakcji.
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FAQ Section (NEW) -->
+        <section id="faq" class="py-24 border-t border-white/5 bg-surface/10">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <span class="text-gold font-mono text-xs tracking-[0.3em] uppercase">Baza Wiedzy</span>
+                    <h2 class="text-3xl md:text-4xl font-display font-bold mt-4 text-white">
+                        Często Zadawane <span class="text-white/50">Pytania</span>
+                    </h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Q1 -->
+                    <div class="faq-item tech-border rounded-xl bg-[#0a0a0a] overflow-hidden group cursor-pointer">
+                        <div class="p-6 flex justify-between items-center" onclick="toggleFaq(this)">
+                            <h3 class="text-white font-medium text-lg">Czy muszę znać się na technologii/AI, żeby korzystać z Enigmy?</h3>
+                            <i class="fa-solid fa-chevron-down text-gray-500 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <div class="faq-content bg-black/20">
+                            <div class="px-6 pb-6 text-mist text-sm leading-relaxed">
+                                Absolutnie nie. Enigma jest zaprojektowana jako system "No-Code" & "No-Prompt". Nie musisz umieć pisać skomplikowanych poleceń. System prowadzi Cię za rękę przez gotowe procesy. Twoim zadaniem jest podejmowanie decyzji biznesowych, resztę robi AI.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="faq-item tech-border rounded-xl bg-[#0a0a0a] overflow-hidden group cursor-pointer">
+                        <div class="p-6 flex justify-between items-center" onclick="toggleFaq(this)">
+                            <h3 class="text-white font-medium text-lg">Czy opłata 1499 PLN jest jednorazowa czy miesięczna?</h3>
+                            <i class="fa-solid fa-chevron-down text-gray-500 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <div class="faq-content bg-black/20">
+                            <div class="px-6 pb-6 text-mist text-sm leading-relaxed">
+                                To opłata za ROCZNY dostęp do całej platformy (Core Access). W przeliczeniu wychodzi to ułamek ceny narzędzi, które Enigma zastępuje (ChatGPT Plus, Midjourney, narzędzia do lejków). Płacisz raz, korzystasz zawsze.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="faq-item tech-border rounded-xl bg-[#0a0a0a] overflow-hidden group cursor-pointer">
+                        <div class="p-6 flex justify-between items-center" onclick="toggleFaq(this)">
+                            <h3 class="text-white font-medium text-lg">Co jeśli nie mam jeszcze pomysłu na biznes?</h3>
+                            <i class="fa-solid fa-chevron-down text-gray-500 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <div class="faq-content bg-black/20">
+                            <div class="px-6 pb-6 text-mist text-sm leading-relaxed">
+                                To idealny moment na start. Moduł ENIGMA VISION posiada agenta "The Monetizer", który na podstawie Twoich zainteresowań i trendów rynkowych wygeneruje dla Ciebie gotowy model zarabiania i plan działania na start.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="faq-item tech-border rounded-xl bg-[#0a0a0a] overflow-hidden group cursor-pointer">
+                        <div class="p-6 flex justify-between items-center" onclick="toggleFaq(this)">
+                            <h3 class="text-white font-medium text-lg">Czy otrzymam fakturę VAT?</h3>
+                            <i class="fa-solid fa-chevron-down text-gray-500 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <div class="faq-content bg-black/20">
+                            <div class="px-6 pb-6 text-mist text-sm leading-relaxed">
+                                Tak. Jesteśmy legalnie działającą polską firmą. Po dokonaniu płatności otrzymasz pełną fakturę VAT 23% na dane podane w formularzu zamówienia.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Q5 -->
+                    <div class="faq-item tech-border rounded-xl bg-[#0a0a0a] overflow-hidden group cursor-pointer">
+                        <div class="p-6 flex justify-between items-center" onclick="toggleFaq(this)">
+                            <h3 class="text-white font-medium text-lg">Czym różni się Enigma od zwykłego ChatGPT?</h3>
+                            <i class="fa-solid fa-chevron-down text-gray-500 transition-transform duration-300 faq-icon"></i>
+                        </div>
+                        <div class="faq-content bg-black/20">
+                            <div class="px-6 pb-6 text-mist text-sm leading-relaxed">
+                                ChatGPT to "silnik". Enigma to "samochód". ChatGPT odpowiada na pytania, ale nie pamięta Twojej strategii między różnymi czatami. Enigma posiada "Pamięć Projektową" (Nexus) - jeśli ustalisz strategię w jednym module, agent od copywritingu czy grafiki już ją zna. Dodatkowo Enigma ma wbudowane specjalistyczne frameworki marketingowe, których czysty GPT nie posiada.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/5 bg-black py-8 pb-32 md:pb-8">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-xs text-gray-600 font-mono">
+                    &copy; 2026 Enigma AI. All systems operational.
+                </div>
+                <div class="flex gap-6 text-xs text-gray-500 font-mono">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Server: PL-Warsaw
+                    </div>
+                    <div>Latency: 12ms</div>
+                    <a href="https://enigmaai.club/doc/regulamin_ENIGMA.pdf" class="hover:text-gold">Regulamin</a>
+                    <a href="https://enigmaai.club/doc/polityka_ENIGMA.pdf" class="hover:text-gold">Polityka Prywatności</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Re-styled Sticky CTA (Glassmorphism Pill) -->
+        <div class="sticky-cta-container" id="stickyCTA">
+            <div class="sticky-pill" onclick="window.location.href='#pricing'">
+                <div class="sticky-text">
+                    Dołącz do <span class="text-gold">Enigma AI</span>
+                </div>
+                <div class="sticky-button cursor-pointer">
+                    Odbierz Dostęp
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Pokazuj CTA po przewinięciu 500px
+            window.addEventListener("scroll", () => {
+                const cta = document.getElementById("stickyCTA");
+                if (window.scrollY > 500) {
+                    cta.classList.add("visible");
+                } else {
+                    cta.classList.remove("visible");
+                }
+            });
+
+            // FAQ Toggle Script
+            function toggleFaq(header) {
+                const item = header.parentElement;
+                const isActive = item.classList.contains('active');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+
+                // Open clicked if wasn't active
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            }
+
+            // Scramble Text Effect
+            class TextScramble {
+                constructor(el) {
+                    this.el = el;
+                    this.chars = '!<>-_\\/[]{}—=+*^?#________';
+                    this.update = this.update.bind(this);
+                }
+                setText(newText) {
+                    const oldText = this.el.innerText;
+                    const length = Math.max(oldText.length, newText.length);
+                    const promise = new Promise((resolve) => this.resolve = resolve);
+                    this.queue = [];
+                    for (let i = 0; i < length; i++) {
+                        const from = oldText[i] || '';
+                        const to = newText[i] || '';
+                        const start = Math.floor(Math.random() * 40);
+                        const end = start + Math.floor(Math.random() * 40);
+                        this.queue.push({ from, to, start, end });
+                    }
+                    cancelAnimationFrame(this.frameRequest);
+                    this.frame = 0;
+                    this.update();
+                    return promise;
+                }
+                update() {
+                    let output = '';
+                    let complete = 0;
+                    for (let i = 0, n = this.queue.length; i < n; i++) {
+                        let { from, to, start, end, char } = this.queue[i];
+                        if (this.frame >= end) {
+                            complete++;
+                            output += to;
+                        } else if (this.frame >= start) {
+                            if (!char || Math.random() < 0.28) {
+                                char = this.randomChar();
+                                this.queue[i].char = char;
+                            }
+                            output += `<span class="text-gold opacity-50">${char}</span>`;
+                        } else {
+                            output += from;
+                        }
+                    }
+                    this.el.innerHTML = output;
+                    if (complete === this.queue.length) {
+                        this.resolve();
+                    } else {
+                        this.frameRequest = requestAnimationFrame(this.update);
+                        this.frame++;
+                    }
+                }
+                randomChar() {
+                    return this.chars[Math.floor(Math.random() * this.chars.length)];
+                }
+            }
+
+            // Initialize Scramble on load
+            document.addEventListener('DOMContentLoaded', () => {
+                const els = document.querySelectorAll('.scramble-text');
+                els.forEach(el => {
+                    const fx = new TextScramble(el);
+                    fx.setText(el.dataset.text);
+                });
+
+                // Countdown Timer Update: Deadline set to Nov 23 2025, 23:59:59
+                // Month is 0-indexed (10 = November)
+                const deadline = new Date(2025, 10, 23, 23, 59, 59).getTime();
+
+                function updateTimer() {
+                    const now = new Date().getTime();
+                    const t = deadline - now;
+
+                    if (t >= 0) {
+                        const days = Math.floor(t / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const mins = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
+                        const secs = Math.floor((t % (1000 * 60)) / 1000);
+
+                        document.getElementById("d").innerText = days < 10 ? "0" + days : days;
+                        document.getElementById("h").innerText = hours < 10 ? "0" + hours : hours;
+                        document.getElementById("m").innerText = mins < 10 ? "0" + mins : mins;
+                        document.getElementById("s").innerText = secs < 10 ? "0" + secs : secs;
+                    } else {
+                        // Optional: Message when timer expired
+                        // document.getElementById("countdown").innerHTML = "OFERTA WYGASŁA";
+                    }
+                }
+                setInterval(updateTimer, 1000);
+                updateTimer();
+            });
+        </script>
+    </body>
+</html>
