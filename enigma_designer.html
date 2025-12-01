@@ -86,7 +86,6 @@
     @keyframes typing { 0%,60%,100%{ transform:translateY(0); opacity:0.6;} 30%{ transform:translateY(-6px); opacity:1;} }
 
     .input-dock { display:flex; flex-direction:column; gap:10px; padding:4px; background:var(--panel-strong); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
-    .input-top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:0.85rem; padding:0 6px; }
     .quick-actions { display:flex; gap:8px; flex-wrap:wrap; padding:0 6px; }
     .quick-actions button { border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--text); border-radius:12px; padding:8px 10px; font-size:0.88rem; cursor:pointer; }
     .quick-actions button:hover { border-color:var(--accent); color:var(--accent-strong); }
@@ -153,7 +152,7 @@
     <header>
       <div class="brand">
         <h1>Enigma Designer</h1>
-        <p>AI Landing Page Builder – generuje do 2400 linii HTML</p>
+        <p>AI Landing Page Builder</p>
       </div>
       <div class="header-actions">
         <button class="ghost-btn" id="new-session"><i class="fa-solid fa-bolt"></i> Nowa sesja</button>
@@ -164,18 +163,6 @@
     </header>
 
     <main class="chat-wrapper">
-      <section class="banner" id="start-banner">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <div>
-          <strong>Start: wklej pełny output Landing Architect.</strong>
-          <p>Aby wygenerować kod HTML, potrzebuję linii <code>STYLE:</code>, mapy sekcji, treści sekcji oraz <code>NOTATKI DLA DESIGNERA/DEVA</code>. Odpowiadam pełnym blokiem <code>html</code>, komentarze trzymam poza blokiem.</p>
-          <div class="cta">
-            <span class="pill"><i class="fa-solid fa-clipboard"></i> Wklej pełny output LA</span>
-            <span class="pill"><i class="fa-solid fa-clock"></i> Generuję do ~2400 linii, proszę czekać</span>
-          </div>
-        </div>
-      </section>
-
       <section class="chat-surface">
         <div class="messages" id="messages"></div>
         <div class="typing-indicator" id="typing" style="display:none;">
@@ -189,24 +176,19 @@
         <div class="long-run-banner" id="long-run-banner">
           <i class="fa-solid fa-circle-notch fa-spin"></i>
           <div>
-            <div><strong>Generuję do 2400 linii HTML</strong></div>
+            <div><strong>Generuję kod HTML</strong></div>
             <div style="color:var(--muted);">Czekaj, aż kod się pojawi – możesz obserwować animację postępu.</div>
           </div>
           <div class="shimmer"></div>
         </div>
         <div class="input-dock">
-          <div class="input-top">
-            <span id="length-info">0 znaków • wymagany pełny output LA</span>
-            <span><i class="fa-solid fa-shield"></i> <span id="endpoint-label">Endpoint: deepseek_proxy.php</span></span>
-          </div>
           <div class="quick-actions">
             <button type="button" id="qa-improve"><i class="fa-solid fa-wand-magic-sparkles"></i> Poproś o poprawki</button>
             <button type="button" id="qa-variant"><i class="fa-solid fa-shuffle"></i> Nowy wariant layoutu</button>
             <button type="button" id="qa-review"><i class="fa-solid fa-list-check"></i> Podsumowanie sekcji</button>
-            <button type="button" id="qa-sample"><i class="fa-solid fa-file-circle-plus"></i> Wklej szablon LA</button>
           </div>
           <div class="input-area">
-            <textarea id="user-input" placeholder="Wklej output Landing Architect lub poproś o poprawki…"></textarea>
+            <textarea id="user-input" placeholder="Opisz, co mamy zmienić lub dodaj brief sekcji…"></textarea>
             <button id="send-btn" aria-label="Wyślij wiadomość"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>
@@ -230,8 +212,8 @@
         <h3>Jak korzystać</h3>
         <button aria-label="Zamknij pomoc" id="close-help"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p>1) Wklej pełny output Landing Architect: <code>STYLE</code>, mapa sekcji, treści sekcji, <code>NOTATKI DLA DESIGNERA/DEVA</code>.</p>
-      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~4000 linii w ramach limitu API 8192 tokenów dla <strong>deepseek-reasoner</strong>). W trakcie widać animację pracy modelu.</p>
+      <p>1) Dodaj dane potrzebne do wygenerowania strony (układ, treści, wskazówki projektowe).</p>
+      <p>2) Poczekaj na blok <code>html</code>. W trakcie widać animację pracy modelu.</p>
       <p>3) Skopiuj lub pobierz kod z paska nad blokiem. Możesz zapisać i przywrócić historię sesji.</p>
     </div>
   </div>
@@ -286,7 +268,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     const longRunEl = document.getElementById('long-run-banner');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
-    const lengthInfo = document.getElementById('length-info');
     const toastEl = document.getElementById('toast');
 
     const historyModal = document.getElementById('history-modal');
@@ -294,23 +275,14 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     const helpModal = document.getElementById('help-modal');
     const restoreLastBtn = document.getElementById('restore-last');
     const quickActions = [
-      { id: 'qa-improve', text: 'Popraw wersję landing page\'a na podstawie poprzedniego outputu LA. Zmiany: ' },
-      { id: 'qa-variant', text: 'Na bazie tego samego outputu LA przygotuj alternatywny wariant layoutu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
-      { id: 'qa-review', text: 'Podsumuj otrzymany output LA i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' },
-      { id: 'qa-sample', text: 'STYLE: #7 Ciemny wysoki kontrast\nSEKCJE: hero, sekcja atutów, social proof, oferta, CTA, FAQ, stopka\nTREŚCI: \n- Hero: Tytuł, lead, przycisk „Zamów demo”\n- Atuty: 3 karty z ikoną i opisem\n- Social proof: logotypy klientów\n- Oferta: 3 plany z ceną i CTA\n- CTA: pasek z przyciskiem\n- FAQ: 5 pytań/odpowiedzi\nNOTATKI DLA DESIGNERA/DEVA: Nowoczesny układ, gradientowe akcenty, subtelne animacje hover. Dodaj sticky navbar i przewijany FAQ.' }
+      { id: 'qa-improve', text: 'Popraw bieżący landing page na podstawie ostatniego briefu. Zmiany: ' },
+      { id: 'qa-variant', text: 'Przygotuj alternatywny wariant layoutu dla tego samego projektu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
+      { id: 'qa-review', text: 'Podsumuj aktualny brief i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' }
     ];
 
     let messages = [];
     let askingForLA = false;
     let currentSessionId = Date.now();
-
-    function updateLength() {
-      const len = userInput.value.length;
-      lengthInfo.textContent = `${len} znaków • wymagany pełny output LA`;
-    }
-
-    userInput.addEventListener('input', updateLength);
-    updateLength();
 
     function showToast(text) {
       toastEl.textContent = text;
@@ -320,8 +292,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
     function renderMessages() {
       messagesEl.innerHTML = '';
-      const banner = document.getElementById('start-banner');
-      banner.style.display = messages.length ? 'none' : 'flex';
       messages.forEach((msg) => {
         const el = document.createElement('div');
         el.className = `message ${msg.role}`;
@@ -429,9 +399,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       return url;
     })();
 
-    const endpointLabel = document.getElementById('endpoint-label');
-    endpointLabel.textContent = `Endpoint (deepseek-reasoner): ${proxyUrl}`;
-
     const staticHost = /\.github\.io$/i.test(window.location.hostname) || window.location.hostname === 'github.io';
     if (staticHost && !params.get('proxy') && !storedProxy) {
       addMessage('system', 'Wygląda, że korzystasz z hostingu statycznego (np. GitHub Pages). Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom stronę z serwera obsługującego PHP.');
@@ -444,22 +411,19 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       const contextAvailable = hasLAContext(content) || messages.some(m => m.role === 'user' && hasLAContext(m.content));
       if (contextAvailable) askingForLA = false;
       if (!contextAvailable && askingForLA) {
-        addMessage('system', 'Czekam na pełny output Landing Architect (STYLE, mapa sekcji, treści sekcji, NOTATKI DLA DESIGNERA/DEVA).');
+        addMessage('system', 'Czekam na pełny brief sekcji (STYLE, mapa sekcji, treści sekcji, NOTATKI DLA DESIGNERA/DEVA).');
         userInput.value = '';
-        updateLength();
         return;
       }
       if (!contextAvailable) {
-        addMessage('assistant', 'Żeby napisać kod HTML, potrzebuję pełnego outputu z Landing Architect: linia STYLE, mapa sekcji, treści sekcji i NOTATKI DLA DESIGNERA/DEVA. Wklej go proszę.');
+        addMessage('assistant', 'Żeby napisać kod HTML, potrzebuję kompletnego briefu: linia STYLE, mapa sekcji, treści sekcji i NOTATKI DLA DESIGNERA/DEVA. Wklej je proszę.');
         askingForLA = true;
         userInput.value = '';
-        updateLength();
         return;
       }
 
       addMessage('user', content);
       userInput.value = '';
-      updateLength();
       sendToDeepSeek();
     }
 
@@ -604,7 +568,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
     function prefillAction(text) {
       userInput.value = text;
-      updateLength();
       userInput.focus();
     }
 
@@ -621,7 +584,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       currentSessionId = Date.now();
       renderMessages();
       userInput.value = '';
-      updateLength();
       showToast('Rozpoczęto nową sesję.');
     });
 
