@@ -1,9 +1,11 @@
 # Chatboty DeepSeek
 
-Repozytorium zawiera dwa chatboty front-endowe współpracujące z proxy PHP do DeepSeek API:
+Repozytorium zawiera dwa chatboty front-endowe współpracujące z proxy PHP do DeepSeek API (domyślny model: **deepseek-reasoner**):
 
 - **enigma_ebook.html** – generator treści ebooka.
 - **enigma_designer.html** – projektant landing page z obsługą długich odpowiedzi (do ~2400 linii kodu) i narzędziami kopiowania/pobierania bloków kodu.
+
+Skrót najważniejszych parametrów modelu Reasoner znajdziesz w pliku `deepseek_reasoner_notes.md`.
 
 ## Wymagania serwera backend (deepseek_proxy.php)
 - PHP 8.0+ z rozszerzeniem cURL.

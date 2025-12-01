@@ -231,7 +231,7 @@
         <button aria-label="Zamknij pomoc" id="close-help"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <p>1) Wklej pełny output Landing Architect: <code>STYLE</code>, mapa sekcji, treści sekcji, <code>NOTATKI DLA DESIGNERA/DEVA</code>.</p>
-      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~4000 linii w ramach limitu API 8192 tokenów). W trakcie widać animację pracy modelu.</p>
+      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~4000 linii w ramach limitu API 8192 tokenów dla <strong>deepseek-reasoner</strong>). W trakcie widać animację pracy modelu.</p>
       <p>3) Skopiuj lub pobierz kod z paska nad blokiem. Możesz zapisać i przywrócić historię sesji.</p>
     </div>
   </div>
@@ -430,7 +430,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     })();
 
     const endpointLabel = document.getElementById('endpoint-label');
-    endpointLabel.textContent = `Endpoint: ${proxyUrl}`;
+    endpointLabel.textContent = `Endpoint (deepseek-reasoner): ${proxyUrl}`;
 
     const staticHost = /\.github\.io$/i.test(window.location.hostname) || window.location.hostname === 'github.io';
     if (staticHost && !params.get('proxy') && !storedProxy) {
@@ -483,7 +483,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         sendBtn.disabled = true;
 
         const payload = {
-          model: 'deepseek-chat',
+          model: 'deepseek-reasoner',
           messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
           max_tokens: 7800,
           temperature: 0.4

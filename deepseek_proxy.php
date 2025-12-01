@@ -88,7 +88,7 @@ function retryWithShorterContext(array $originalInput, string $apiKey): void {
     $optimizedMessages = optimizeMessages($originalInput['messages']);
 
     $payload = [
-        'model'       => $originalInput['model'] ?? 'deepseek-chat',
+        'model'       => $originalInput['model'] ?? 'deepseek-reasoner',
         'messages'    => $optimizedMessages,
         'stream'      => false,
         'max_tokens'  => 3000,
@@ -124,7 +124,7 @@ try {
         respond(400, ['ok' => false, 'error' => 'Invalid JSON payload. Send { model, messages[] }']);
     }
 
-    $model        = $input['model'] ?? 'deepseek-chat';
+    $model        = $input['model'] ?? 'deepseek-reasoner';
     $messages     = validateMessages($input['messages'] ?? null);
 
     // 🔑 Klucz DeepSeek API - preferuj zmienną środowiskową, w ostateczności fallback

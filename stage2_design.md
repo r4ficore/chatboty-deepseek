@@ -28,7 +28,7 @@
 - **Uploader wiedzy**: na tym etapie pomijamy; opcjonalnie placeholder na przyszłość (disabled, z opisem w pomocy).
 
 ## API i integracje
-- Endpoint: `deepseek_proxy.php` POST JSON `{ model: "deepseek-chat", messages, max_tokens: 9000, temperature: 0.4 }`.
+- Endpoint: `deepseek_proxy.php` POST JSON `{ model: "deepseek-reasoner", messages, max_tokens: 7800, temperature: 0.4 }` (limit API 8192).
 - Header: `Content-Type: application/json`.
 - Retry: max 1–2 przy 502 lub timeout; exponential backoff krótki.
 - Wskaźnik pracy: zaczyna się przed `fetch`, kończy po `response` lub błędzie.

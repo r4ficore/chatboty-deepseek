@@ -8,7 +8,7 @@
 ## Logika front-end
 - **Stan**: `conversationContext.fullHistory` (zapisywany w localStorage pod `enigma_chats`), identyfikator bieżącego czatu `currentChatId`, stan ebooka (`ebookState` dla etapów toc/chapters/final) oraz `knowledgeBase` (pliki, limity, teksty).
 - **Wiadomości**: dodawane przez `addChatMessage`; zapisywanie historii wraz z wyrenderowanym HTML (aby odtworzyć podglądy). Typing indicator (`showTypingIndicator/hideTypingIndicator`).
-- **DeepSeek API**: `callDeepSeek` → POST do `deepseek_proxy.php` z parametrami `{ model: "deepseek-chat", messages, max_tokens: 4000 }`, obsługa retry przy 502, propagacja błędów.
+- **DeepSeek API**: `callDeepSeek` → POST do `deepseek_proxy.php` z parametrami `{ model: "deepseek-reasoner", messages, max_tokens: 4000 }`, obsługa retry przy 502, propagacja błędów.
 - **Budowanie promptu**: `sendToDeepSeekAI(userContent, opts)` tworzy `messages` z system promptem (rola pisarza ebooków, instrukcje formatowania w <FILE>), ewentualnie wiedza z załączników (`buildKnowledgeMessage`, `buildAttachmentContextMessages`).
 - **Parsowanie outputu**: `parseFileBlocks` wyciąga pliki <FILE name="...">, generuje podglądy i linki pobrania. Sterowanie etapami (spis treści → rozdziały → final) zależy od wykrytych plików (`spis_tresci.txt`, `rozdzial_N.txt`, `reasoning_N.txt`).
 - **Historia i nawigacja**: modal z listą czatów (ostatnie 30 dni), `startNewChat` resetuje stan i wyświetla instrukcję startową; obsługa menu, skrót Enter dla wysyłki, auto-resize textarea.
