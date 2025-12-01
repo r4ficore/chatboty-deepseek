@@ -455,7 +455,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       const payload = {
         model: 'deepseek-chat',
         messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
-        max_tokens: 9000,
+        max_tokens: 5000,
         temperature: 0.4
       };
 
@@ -470,19 +470,28 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         });
         clearTimeout(timeout);
 
+        const responseText = await res.text();
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (e) {
+          data = null;
+        }
+
         if (!res.ok) {
+          const apiError = data?.error || data?.message;
           const staticHint = (res.status === 404 || res.status === 405) && staticHost
             ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
             : '';
-          showToast(`Problem z API (kod ${res.status}).${staticHint}`);
-          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${staticHint}`);
+          const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
+          showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
+          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
           sendBtn.disabled = false;
           typingEl.style.display = 'none';
           longRunEl.classList.remove('active');
           return;
         }
 
-        const data = await res.json();
         const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
         addMessage('assistant', assistantMessage);
       } catch (err) {
