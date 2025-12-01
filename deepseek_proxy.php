@@ -25,7 +25,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/deepseek_errors.log');
 
-const MAX_TOKENS_CAP = 5000;
+const MAX_TOKENS_CAP = 10000;
 
 function respond(int $status, array $payload): void {
     http_response_code($status);
@@ -138,7 +138,7 @@ try {
         'model'       => $model,
         'messages'    => optimizeMessages($messages), // OPTYMALIZACJA HISTORII
         'stream'      => false,
-        'max_tokens'  => MAX_TOKENS_CAP, // bezpieczny limit domyślny
+        'max_tokens'  => MAX_TOKENS_CAP, // bezpieczny limit domyślny (podniesiony)
         'temperature' => 0.7,
     ];
 

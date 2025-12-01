@@ -231,7 +231,7 @@
         <button aria-label="Zamknij pomoc" id="close-help"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <p>1) Wklej pełny output Landing Architect: <code>STYLE</code>, mapa sekcji, treści sekcji, <code>NOTATKI DLA DESIGNERA/DEVA</code>.</p>
-      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~2400 linii). W trakcie widać animację pracy modelu.</p>
+      <p>2) Poczekaj na wygenerowanie bloku <code>html</code> (do ~4800 linii dzięki zwiększonemu limitowi). W trakcie widać animację pracy modelu.</p>
       <p>3) Skopiuj lub pobierz kod z paska nad blokiem. Możesz zapisać i przywrócić historię sesji.</p>
     </div>
   </div>
@@ -272,6 +272,9 @@ Jeden kompletny plik HTML w bloku \`\`\`html ... \`\`\`. Bez dodatkowych opisów
 
 [MAPOWANIE STYLÓW NA KOD]
 #1 Minimalistyczny (jasne tło, przestrzeń), #2 Immersyjny z obrazem tła, #3 Typograficzny, #4 Interaktywny z micro-HCI, #5 Neobrutalistyczny, #6 Storytelling wideo-first, #7 Ciemny wysoki kontrast. Jeśli miks, pierwszy numer = styl główny, kolejne = akcenty.
+
+[ESTETYKA I DYNAMIKA]
+Strona ma wyglądać nowocześnie i wykorzystywać interaktywne elementy zgodne ze STYLE i NOTATKAMI. Możesz stosować: floating notifications, animated counter, sticky navigation reagującą na scroll, gradient animations, spotlight effects na kartach, animated borders/pulsujące obramowania dla elementów PRO, scroll animations, interactive FAQ z animacjami, shimmer effects na przyciskach, pulse animations, glassmorphism, gradientowe tła i inne nowoczesne mikroanimacje. Wybieraj efekty, które wzmacniają czytelność i konwersję.
 
 [PRIORYTETY]
 Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność strukturze, treści i stylowi. Kod ma być czysty, responsywny i gotowy do użycia jako index.html.
@@ -468,7 +471,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       const payload = {
         model: 'deepseek-chat',
         messages: [{ role: 'system', content: DESIGNER_SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
-        max_tokens: 5000,
+        max_tokens: 9000,
         temperature: 0.4
       };
 

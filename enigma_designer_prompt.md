@@ -185,6 +185,27 @@ Jeśli `STYLE` zawiera miks (np. `#1 + #7`):
 
 ---
 
+[ESTETYKA I DYNAMIKA – CO MA BYĆ WIDOCZNE]
+
+* Strona ma wyglądać **nowocześnie** i zawierać elementy interaktywne. Możesz stosować m.in.:
+  * floating notifications / pływające elementy w hero,
+  * animated counter (np. licznik freelancerów),
+  * sticky navigation zmieniającą stan przy scrollu,
+  * gradient animations w tekście i tle,
+  * spotlight effects na kartach przy hoverze,
+  * animated borders / pulsujące obramowania dla elementów PRO,
+  * scroll animations (płynne pojawianie się sekcji),
+  * interactive FAQ z animacjami,
+  * shimmer effects na przyciskach,
+  * pulse animations dla kluczowych elementów,
+  * glassmorphism / zaawansowane efekty szkła,
+  * tła gradientowe i subtelne efekty wizualne,
+  * inne nowoczesne mikroanimacje, które znasz.
+* Dobieraj animacje i efekty zgodnie z `STYLE` i `NOTATKI DLA DESIGNERA/DEVA`, tak by wzmacniały czytelność i konwersję.
+* Output ma pozostać w jednym bloku `html`; kod powinien być gotowy do użycia jako kompletny landing page.
+
+---
+
 [INTERAKCJA I ITERACJE]
 
 * Jeśli użytkownik zmienia input (np. nowy output od Landing Architect):
