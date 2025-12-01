@@ -474,7 +474,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
 
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 180000);
+          const timeout = setTimeout(() => controller.abort(), 300000);
           const res = await fetch(proxyUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -509,7 +509,7 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
           addMessage('assistant', assistantMessage);
         } catch (err) {
           const aborted = err?.name === 'AbortError';
-          const hint = aborted ? 'Limit czasu (3 minuty) został przekroczony.' : 'Błąd połączenia z proxy/API.';
+          const hint = aborted ? 'Limit czasu (5 minut) został przekroczony.' : 'Błąd połączenia z proxy/API.';
           showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
           addMessage('system', `${hint} Możesz ponowić wysłanie, skrócić prompt albo użyć innego endpointu proxy.`);
         } finally {

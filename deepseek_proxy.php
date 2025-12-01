@@ -173,7 +173,7 @@ try {
             'User-Agent: Enigma-EBook-Builder/1.0',
         ],
         CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-        CURLOPT_TIMEOUT        => 180, // Zwiększony timeout do 3 minut
+        CURLOPT_TIMEOUT        => 300, // Zwiększony timeout do 5 minut
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
     ]);
