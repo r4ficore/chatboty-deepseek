@@ -86,7 +86,6 @@
     @keyframes typing { 0%,60%,100%{ transform:translateY(0); opacity:0.6;} 30%{ transform:translateY(-6px); opacity:1;} }
 
     .input-dock { display:flex; flex-direction:column; gap:10px; padding:4px; background:var(--panel-strong); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
-    .input-top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:0.85rem; padding:0 6px; }
     .quick-actions { display:flex; gap:8px; flex-wrap:wrap; padding:0 6px; }
     .quick-actions button { border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--text); border-radius:12px; padding:8px 10px; font-size:0.88rem; cursor:pointer; }
     .quick-actions button:hover { border-color:var(--accent); color:var(--accent-strong); }
@@ -183,16 +182,13 @@
           <div class="shimmer"></div>
         </div>
         <div class="input-dock">
-          <div class="input-top">
-            <span><i class="fa-solid fa-shield"></i> <span id="endpoint-label">Endpoint: deepseek_proxy.php</span></span>
-          </div>
           <div class="quick-actions">
             <button type="button" id="qa-improve"><i class="fa-solid fa-wand-magic-sparkles"></i> Poproś o poprawki</button>
             <button type="button" id="qa-variant"><i class="fa-solid fa-shuffle"></i> Nowy wariant layoutu</button>
             <button type="button" id="qa-review"><i class="fa-solid fa-list-check"></i> Podsumowanie sekcji</button>
           </div>
           <div class="input-area">
-            <textarea id="user-input" placeholder="Wklej output Landing Architect lub poproś o poprawki…"></textarea>
+            <textarea id="user-input" placeholder="Opisz, co mamy zmienić lub dodaj brief sekcji…"></textarea>
             <button id="send-btn" aria-label="Wyślij wiadomość"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>
@@ -279,9 +275,9 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
     const helpModal = document.getElementById('help-modal');
     const restoreLastBtn = document.getElementById('restore-last');
     const quickActions = [
-      { id: 'qa-improve', text: 'Popraw wersję landing page\'a na podstawie poprzedniego outputu LA. Zmiany: ' },
-      { id: 'qa-variant', text: 'Na bazie tego samego outputu LA przygotuj alternatywny wariant layoutu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
-      { id: 'qa-review', text: 'Podsumuj otrzymany output LA i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' }
+      { id: 'qa-improve', text: 'Popraw bieżący landing page na podstawie ostatniego briefu. Zmiany: ' },
+      { id: 'qa-variant', text: 'Przygotuj alternatywny wariant layoutu dla tego samego projektu (inne akcenty wizualne, ten sam przekaz). Uwagi: ' },
+      { id: 'qa-review', text: 'Podsumuj aktualny brief i wskaż sekcje, które wymagają doprecyzowania przed kolejną iteracją kodu.' }
     ];
 
     let messages = [];
@@ -403,9 +399,6 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       return url;
     })();
 
-    const endpointLabel = document.getElementById('endpoint-label');
-    endpointLabel.textContent = `Endpoint: ${proxyUrl}`;
-
     const staticHost = /\.github\.io$/i.test(window.location.hostname) || window.location.hostname === 'github.io';
     if (staticHost && !params.get('proxy') && !storedProxy) {
       addMessage('system', 'Wygląda, że korzystasz z hostingu statycznego (np. GitHub Pages). Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom stronę z serwera obsługującego PHP.');
@@ -418,12 +411,12 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
       const contextAvailable = hasLAContext(content) || messages.some(m => m.role === 'user' && hasLAContext(m.content));
       if (contextAvailable) askingForLA = false;
       if (!contextAvailable && askingForLA) {
-        addMessage('system', 'Czekam na pełny output Landing Architect (STYLE, mapa sekcji, treści sekcji, NOTATKI DLA DESIGNERA/DEVA).');
+        addMessage('system', 'Czekam na pełny brief sekcji (STYLE, mapa sekcji, treści sekcji, NOTATKI DLA DESIGNERA/DEVA).');
         userInput.value = '';
         return;
       }
       if (!contextAvailable) {
-        addMessage('assistant', 'Żeby napisać kod HTML, potrzebuję pełnego outputu z Landing Architect: linia STYLE, mapa sekcji, treści sekcji i NOTATKI DLA DESIGNERA/DEVA. Wklej go proszę.');
+        addMessage('assistant', 'Żeby napisać kod HTML, potrzebuję kompletnego briefu: linia STYLE, mapa sekcji, treści sekcji i NOTATKI DLA DESIGNERA/DEVA. Wklej je proszę.');
         askingForLA = true;
         userInput.value = '';
         return;
