@@ -8,7 +8,10 @@
 - Przebudowano front-end tak, aby każdy rozdział był zapisywany i prezentowany z dedykowanym podglądem reasoning oraz kontrolkami zapisu lub poprawy.
 - Dodano panel zarządzania zaakceptowanymi rozdziałami, umożliwiający ich ponowną generację lub całkowite usunięcie wraz z powiązanymi plikami reasoning.
 - Backend wspiera teraz zapisywanie, usuwanie i scalanie plików w ramach odseparowanych sesji, co pozwala na budowanie finalnego ebooka dopiero po akceptacji wszystkich części.
+- Zaimplementowano integrację z plikiem `Analiza_rynku_Ebook_Copywriting.pdf`, który jest automatycznie ładowany i streszczany, a następnie przekazywany do modelu jako materiał referencyjny przy planowaniu spisu treści i pisaniu rozdziałów.
+- Uporządkowano obsługę konfliktów stanu bazy wiedzy tak, aby kolejne sesje mogły ponownie wczytać materiał PDF i informować użytkownika o ewentualnych błędach tylko wtedy, gdy faktycznie wystąpią.
 
 ## Kolejne kroki
-- Zaimplementować integrację z bazą wiedzy (pliki referencyjne) tak, aby przed generacją rozdziałów model mógł automatycznie włączać odnalezione materiały pomocnicze.
 - Rozszerzyć testy end-to-end, aby zweryfikować przepływ akceptacji, nadpisywania i usuwania rozdziałów w przeglądarce oraz poprawną obsługę błędów sieciowych.
+- Dodać testy regresyjne weryfikujące, czy brak dostępu do pliku PDF lub błędna struktura nie blokują generowania treści (powinien pojawić się komunikat ostrzegawczy, a proces przejść w tryb awaryjny).
+- Rozważyć dodanie UI do ręcznego wyboru lub filtrowania fragmentów wiedzy, aby użytkownik mógł wskazać, które sekcje analizy rynku są kluczowe dla konkretnego rozdziału.

@@ -141,32 +141,135 @@
     /* Panel zarządzania zaakceptowanymi rozdziałami */
     .chapter-management {
       display: none;
-      padding: 16px 24px 0 24px;
+      padding: 16px 24px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(12,12,12,0.85);
+      flex-shrink: 0;
+      gap: 12px;
     }
-    .chapter-management.has-items { display: block; }
+    .chapter-management.has-items {
+      display: flex;
+      flex-direction: column;
+    }
+    .chapter-management-toggle {
+      width: 100%;
+      background: rgba(24,24,24,0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      color: #f6f6f6;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .chapter-management-toggle:hover {
+      background: rgba(34,34,34,0.9);
+    }
+    .chapter-management-toggle .toggle-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+    }
+    .chapter-management-toggle .toggle-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: #d1d5db;
+    }
+    .chapter-management-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #d6b376;
+      color: #101010;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .chapter-management-toggle .toggle-icon {
+      transition: transform 0.2s ease;
+    }
+    .chapter-management.is-open .chapter-management-toggle {
+      border-color: #d6b376;
+      background: rgba(34,34,34,0.9);
+    }
+    .chapter-management.is-open .chapter-management-toggle .toggle-icon {
+      transform: rotate(180deg);
+    }
+    .chapter-management-panel {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      background: rgba(24,24,24,0.88);
+      padding: 14px 16px 16px;
+    }
+    .chapter-management.is-open .chapter-management-panel {
+      display: flex;
+    }
     .chapter-management-header {
-      display: flex; justify-content: space-between; align-items: baseline;
-      gap: 12px; margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .chapter-management-header h3 {
-      margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
-      color: #d6b376;
+    .chapter-management-header p {
+      margin: 0;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      line-height: 1.4;
     }
-    .chapter-management-header span {
-      font-size: 0.7rem; color: #9ca3af;
+    .accepted-chapters-scroll {
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 6px;
+      margin-top: 2px;
+      display: block;
+    }
+    .accepted-chapters-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .accepted-chapters-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
     }
     #accepted-chapters-list {
-      list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
     }
     .accepted-chapter-item {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px; background: rgba(24,24,24,0.85);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(24,24,24,0.85);
     }
     .accepted-chapter-label {
-      font-size: 0.78rem; font-weight: 500; color: #f3f4f6;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #f3f4f6;
+      flex: 1;
+      min-width: 0;
     }
     .accepted-chapter-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .accepted-chapter-actions button {
@@ -190,7 +293,6 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
   <div class="chat-container">
@@ -207,11 +309,21 @@
     </div>
 
     <div id="chapter-management" class="chapter-management">
-      <div class="chapter-management-header">
-        <h3>Zaakceptowane rozdziały</h3>
-        <span>Zarządzaj zapisanymi treściami lub poproś o ich poprawę.</span>
+      <button id="accepted-chapters-toggle" class="chapter-management-toggle" type="button" aria-expanded="false" aria-controls="accepted-chapters-panel">
+        <span class="toggle-title"><i class="fa-solid fa-check-double"></i>Zaakceptowane rozdziały</span>
+        <span class="toggle-meta">
+          <span id="accepted-chapters-count" class="chapter-management-count">0</span>
+          <i class="fa-solid fa-chevron-down toggle-icon" aria-hidden="true"></i>
+        </span>
+      </button>
+      <div id="accepted-chapters-panel" class="chapter-management-panel" hidden>
+        <div class="chapter-management-header">
+          <p>Zarządzaj zapisanymi treściami lub poproś o ich poprawę.</p>
+        </div>
+        <div class="accepted-chapters-scroll">
+          <ul id="accepted-chapters-list"></ul>
+        </div>
       </div>
-      <ul id="accepted-chapters-list"></ul>
     </div>
 
     <div id="chat-messages" class="chat-messages"></div>
@@ -256,7 +368,34 @@
     const closeHistoryBtn = document.getElementById('close-history');
     const historyList  = document.getElementById('history-list');
     const chapterManagement = document.getElementById('chapter-management');
+    const acceptedChaptersToggle = document.getElementById('accepted-chapters-toggle');
+    const acceptedChaptersPanel = document.getElementById('accepted-chapters-panel');
+    const acceptedChaptersCount = document.getElementById('accepted-chapters-count');
     const acceptedChaptersList = document.getElementById('accepted-chapters-list');
+
+    let acceptedChaptersOpen = false;
+
+    function setAcceptedChaptersOpen(isOpen) {
+      acceptedChaptersOpen = isOpen;
+      if (chapterManagement) {
+        chapterManagement.classList.toggle('is-open', isOpen);
+      }
+      if (acceptedChaptersToggle) {
+        acceptedChaptersToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+      if (acceptedChaptersPanel) {
+        acceptedChaptersPanel.hidden = !isOpen;
+      }
+    }
+
+    if (acceptedChaptersToggle) {
+      acceptedChaptersToggle.addEventListener('click', () => {
+        if (!chapterManagement || !chapterManagement.classList.contains('has-items')) return;
+        setAcceptedChaptersOpen(!acceptedChaptersOpen);
+      });
+    }
+
+    setAcceptedChaptersOpen(false);
 
     let currentChatId = null;
 
@@ -279,23 +418,37 @@
     };
 
     const knowledgeBase = {
-      attachments: [],
-      totalChars: 0,
+      url: 'knowledge_base/Analiza_rynku_Ebook_Copywriting.pdf',
+      status: 'idle',
+      loadPromise: null,
       text: '',
-      limits: {
-        maxFiles: 3,
-        maxTotalChars: 60000,
-        maxFileSize: 4 * 1024 * 1024
-      }
+      excerpt: '',
+      lastError: null,
+      notified: false
     };
 
-    function resetKnowledgeBaseState({ preserveAttachments = false } = {}) {
-      if (!preserveAttachments) {
-        knowledgeBase.attachments = [];
-        knowledgeBase.totalChars = 0;
+    function resetKnowledgeBaseState({ preserveText = true } = {}) {
+      knowledgeBase.notified = false;
+
+      if (!preserveText) {
         knowledgeBase.text = '';
+        knowledgeBase.excerpt = '';
       }
-      renderKnowledgeBaseAttachments();
+
+      if (knowledgeBase.status === 'error') {
+        knowledgeBase.text = '';
+        knowledgeBase.excerpt = '';
+        knowledgeBase.status = 'idle';
+        knowledgeBase.loadPromise = null;
+        knowledgeBase.lastError = null;
+        return;
+      }
+
+      if (!preserveText) {
+        knowledgeBase.status = 'idle';
+        knowledgeBase.loadPromise = null;
+        knowledgeBase.lastError = null;
+      }
     }
 
     // Pełny kontekst rozmowy (dla API)
@@ -332,6 +485,153 @@ Dodatkowe wymogi reasoning:
 
 Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdziałami.`
     };
+
+    function splitParagraphs(text) {
+      return (text || '')
+        .split(/\n{2,}/)
+        .map(p => p.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+    }
+
+    function buildExcerptFromParagraphs(paragraphs, maxChars = 3600) {
+      const selected = [];
+      let total = 0;
+      for (const p of paragraphs) {
+        if (!p) continue;
+        selected.push(p);
+        total += p.length + 2;
+        if (total >= maxChars) break;
+      }
+      return selected.join('\n\n').slice(0, maxChars);
+    }
+
+    function deriveKnowledgeQuery({ userText = '', explicitQuery = '' }) {
+      if (explicitQuery) return explicitQuery;
+      const lower = userText.toLowerCase();
+      if (ebookState.stage === 'chapters') {
+        const idx = ebookState.currentChapter || ebookState.lastGenerated?.chapterIndex || 1;
+        const entry = getTocEntry(idx);
+        if (entry) {
+          return `${entry.title} ${entry.description || ''}`.trim();
+        }
+      }
+      if (ebookState.stage === 'toc' || lower.includes('spis treści')) {
+        return 'spis treści ebook marketing copywriting';
+      }
+      if (lower.includes('tytuł')) {
+        return 'tytuł ebook marketingowy strategia';
+      }
+      return 'ebook marketing copywriting analiza rynku automatyzacja lejki';
+    }
+
+    function selectKnowledgeSnippets(query, maxChars = 3600) {
+      if (!knowledgeBase.text) return '';
+      const paragraphs = splitParagraphs(knowledgeBase.text);
+      if (!paragraphs.length) return '';
+
+      const terms = Array.from(new Set((query || '')
+        .toLowerCase()
+        .split(/[^a-ząćęłńóśźż0-9]+/i)
+        .filter(token => token && token.length > 3)));
+
+      if (!terms.length) {
+        return buildExcerptFromParagraphs(paragraphs, maxChars);
+      }
+
+      const scored = paragraphs.map((p, idx) => {
+        const lower = p.toLowerCase();
+        let score = 0;
+        for (const term of terms) {
+          if (lower.includes(term)) score += 2;
+          if (lower.startsWith(term)) score += 1;
+        }
+        return { p, score, idx };
+      });
+
+      scored.sort((a, b) => {
+        if (b.score === a.score) return a.idx - b.idx;
+        return b.score - a.score;
+      });
+
+      const selected = [];
+      let total = 0;
+      for (const item of scored) {
+        if (!item.p) continue;
+        if (item.score <= 0 && selected.length) break;
+        selected.push(item.p);
+        total += item.p.length + 2;
+        if (total >= maxChars) break;
+      }
+
+      if (!selected.length) {
+        return buildExcerptFromParagraphs(paragraphs, maxChars);
+      }
+
+      const snippet = selected.join('\n\n');
+      return snippet.length > maxChars ? snippet.slice(0, maxChars) : snippet;
+    }
+
+    function buildKnowledgeMessage({ query, stage }) {
+      if (!knowledgeBase.text) return '';
+      const snippet = selectKnowledgeSnippets(query, 3400);
+      if (!snippet) return '';
+      const stageHint = stage === 'chapters'
+        ? 'Przygotowując kolejny rozdział'
+        : stage === 'toc'
+          ? 'Tworząc spis treści lub sekcję meta'
+          : 'Tworząc zawartość eBooka';
+
+      return `${stageHint} korzystaj z materiału referencyjnego "Analiza_rynku_Ebook_Copywriting.pdf". Kluczowe fragmenty:\n${snippet}\n\nWłącz powyższe dane do treści własnymi słowami, zachowując spójność ze spisem treści i koncepcją ebooka.`;
+    }
+
+    async function loadKnowledgeBase() {
+      if (!window.pdfjsLib) {
+        knowledgeBase.status = 'error';
+        knowledgeBase.lastError = new Error('Brak biblioteki pdf.js');
+        throw knowledgeBase.lastError;
+      }
+      if (knowledgeBase.status === 'loaded') {
+        return knowledgeBase;
+      }
+      if (knowledgeBase.status === 'loading' && knowledgeBase.loadPromise) {
+        await knowledgeBase.loadPromise;
+        return knowledgeBase;
+      }
+
+      knowledgeBase.status = 'loading';
+      knowledgeBase.loadPromise = (async () => {
+        const loadingTask = pdfjsLib.getDocument({ url: knowledgeBase.url });
+        const pdfDoc = await loadingTask.promise;
+        const chunks = [];
+
+        for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
+          const page = await pdfDoc.getPage(pageNumber);
+          const content = await page.getTextContent();
+          const pageText = content.items
+            .map(item => (item.str || ''))
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (pageText) {
+            chunks.push(pageText);
+          }
+        }
+
+        knowledgeBase.text = chunks.join('\n\n');
+        knowledgeBase.excerpt = buildExcerptFromParagraphs(splitParagraphs(knowledgeBase.text), 3400);
+        knowledgeBase.status = 'loaded';
+        knowledgeBase.lastError = null;
+      })().catch(err => {
+        knowledgeBase.status = 'error';
+        knowledgeBase.lastError = err;
+        throw err;
+      }).finally(() => {
+        knowledgeBase.loadPromise = null;
+      });
+
+      await knowledgeBase.loadPromise;
+      return knowledgeBase;
+    }
 
     function resetEbookState({ newSession = false } = {}) {
       if (newSession) {
@@ -392,9 +692,17 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       const items = [...ebookState.accepted].sort((a, b) => a.chapterIndex - b.chapterIndex);
       if (!items.length) {
         chapterManagement.classList.remove('has-items');
+        setAcceptedChaptersOpen(false);
+        if (acceptedChaptersCount) {
+          acceptedChaptersCount.textContent = '0';
+        }
         return;
       }
       chapterManagement.classList.add('has-items');
+      if (acceptedChaptersCount) {
+        acceptedChaptersCount.textContent = String(items.length);
+      }
+      setAcceptedChaptersOpen(acceptedChaptersOpen);
       for (const item of items) {
         const li = document.createElement('li');
         li.className = 'accepted-chapter-item';
@@ -524,6 +832,12 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       chatMessages.innerHTML = '';
       resetEbookState({ newSession: true });
 
+      resetKnowledgeBaseState({ preserveText: knowledgeBase.status === 'loaded' && !!knowledgeBase.text });
+
+      if (knowledgeBase.status === 'idle') {
+        loadKnowledgeBase().catch(err => console.warn('Knowledge base prefetch failed', err));
+      }
+
       addChatMessage(
         `<strong>Zacznijmy:</strong>
         Podaj temat Ebooka, docelową grupę odbiorców i określ preferowany styl (np. biznesowy/storytelling/techniczny). Potem ustalimy liczbę rozdziałów i ich ~długość, wygeneruję spis treści do akceptacji, a następnie rozdziały – każdy jako <u>plik .txt do podglądu i pobrania</u>.`);
@@ -550,7 +864,10 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
             currentChatId = id;
             conversationContext.fullHistory = chat.history;
             renderChatFromHistory();
-            resetKnowledgeBaseState({ preserveAttachments: false });
+            resetKnowledgeBaseState({ preserveText: knowledgeBase.status === 'loaded' && !!knowledgeBase.text });
+            if (knowledgeBase.status === 'idle') {
+              loadKnowledgeBase().catch(err => console.warn('Knowledge base prefetch failed', err));
+            }
             historyModal.style.display = 'none';
           });
           historyList.appendChild(li);
@@ -731,6 +1048,39 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
 
       ebookState.lastReasoningGenerated = null;
 
+      const opts = options || {};
+      const lowerUserText = (userText || '').toLowerCase();
+      const shouldAttachKnowledge = !!(opts.forceKnowledge
+        || opts.knowledgeQuery
+        || ebookState.stage === 'chapters'
+        || ebookState.stage === 'toc'
+        || lowerUserText.includes('spis treści')
+        || lowerUserText.includes('rozdział')
+        || lowerUserText.includes('ebook'));
+
+      let knowledgeSystemMessage = '';
+      if (shouldAttachKnowledge) {
+        try {
+          await loadKnowledgeBase();
+          if (knowledgeBase.status === 'loaded' && knowledgeBase.text) {
+            const query = deriveKnowledgeQuery({
+              userText: lowerUserText,
+              explicitQuery: opts.knowledgeQuery || ''
+            });
+            knowledgeSystemMessage = buildKnowledgeMessage({
+              query,
+              stage: ebookState.stage
+            });
+          }
+        } catch (kbErr) {
+          console.error('Knowledge base load failed', kbErr);
+          if (!knowledgeBase.notified) {
+            addChatMessage('⚠️ Nie udało się załadować materiału referencyjnego Analiza_rynku_Ebook_Copywriting.pdf. Kontynuuję bez niego.', false);
+            knowledgeBase.notified = true;
+          }
+        }
+      }
+
       // zbuduj pełne messages dla DeepSeek API
       const apiHistory = conversationContext.fullHistory.map(m => ({ role: m.role, content: m.content }));
       const attachmentMessages = buildAttachmentContextMessages();
@@ -747,15 +1097,8 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
       ];
 
       if (knowledgeSystemMessage) {
-        messages.push({ role: 'system', content: knowledgeSystemMessage });
+        messages.splice(1, 0, { role: 'system', content: knowledgeSystemMessage });
       }
-
-      if (attachmentMessages.length) {
-        messages.push(...attachmentMessages);
-      }
-
-      messages.push(...apiHistory);
-      messages.push({ role: "user", content: userText });
 
       try {
         const data = await callDeepSeek(messages);
@@ -886,7 +1229,8 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
                 await sendToDeepSeekAI(
                   `Popraw rozdział ${thisIdx} wg wskazówek:
                    ${notes}
-                   Zwróć TYLKO pliki <FILE name="rozdzial_${String(thisIdx).padStart(2,'0')}.txt">…</FILE> oraz <FILE name="reasoning_${String(thisIdx).padStart(2,'0')}.txt">…</FILE>.`
+                   Zwróć TYLKO pliki <FILE name="rozdzial_${String(thisIdx).padStart(2,'0')}.txt">…</FILE> oraz <FILE name="reasoning_${String(thisIdx).padStart(2,'0')}.txt">…</FILE>.`,
+                  { forceKnowledge: true, knowledgeQuery: buildChapterLabel(thisIdx) }
                 );
               }
             }
@@ -928,7 +1272,7 @@ Wszystko po polsku. Trzymaj jakość merytoryczną i spójność między rozdzia
 
       const request = `${instruction}\n\nZwróć dokładnie dwa pliki w tej kolejności:\n1) <FILE name="rozdzial_${n}.txt">[finalna treść rozdziału – bez meta-komentarzy]</FILE>\n2) <FILE name="reasoning_${n}.txt">[Sekcje: Koncepcja eBooka; Streszczenie bieżącego rozdziału; Powiązanie z poprzednim rozdziałem; Zapowiedź kolejnego rozdziału]</FILE>`;
 
-      await sendToDeepSeekAI(request);
+      await sendToDeepSeekAI(request, { forceKnowledge: true, knowledgeQuery: entryLabel });
     }
 
     async function acceptChapterAndMaybeNext(generateNext) {
