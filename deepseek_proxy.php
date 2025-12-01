@@ -188,7 +188,11 @@ try {
     error_log("DeepSeek API Response - HTTP: $httpcode, Error: $errmsg");
 
     if ($errno) {
-        respond(502, ['ok' => false, 'error' => "DeepSeek API connection error: $errmsg"]);
+        $status = ($errno === CURLE_OPERATION_TIMEOUTED) ? 504 : 502;
+        respond($status, [
+            'ok'    => false,
+            'error' => "DeepSeek API connection error: $errmsg",
+        ]);
     }
 
     if ($httpcode === 502) {

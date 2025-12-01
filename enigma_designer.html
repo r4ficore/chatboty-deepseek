@@ -459,50 +459,52 @@ Nigdy nie generuj kodu bez realnego outputu LA. Gdy go masz, zachowaj wierność
         temperature: 0.4
       };
 
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 180000);
-        const res = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
-
-        const responseText = await res.text();
-        let data;
         try {
-          data = responseText ? JSON.parse(responseText) : null;
-        } catch (e) {
-          data = null;
-        }
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 180000);
+          const res = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+          });
+          clearTimeout(timeout);
 
-        if (!res.ok) {
-          const apiError = data?.error || data?.message;
-          const staticHint = (res.status === 404 || res.status === 405) && staticHost
-            ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
-            : '';
-          const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
-          showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
-          addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
+          const responseText = await res.text();
+          let data;
+          try {
+            data = responseText ? JSON.parse(responseText) : null;
+          } catch (e) {
+            data = null;
+          }
+
+          if (!res.ok) {
+            const apiError = data?.error || data?.message || (responseText ? responseText.trim() : '');
+            const staticHint = (res.status === 404 || res.status === 405) && staticHost
+              ? ' Wygląda na to, że serwer statyczny nie obsługuje PHP. Dodaj parametr ?proxy=https://twoj-serwer.pl/deepseek_proxy.php lub uruchom lokalnie z PHP.'
+              : '';
+            const guidance = apiError ? ` Szczegóły: ${apiError}` : '';
+            showToast(`Problem z API (kod ${res.status}).${guidance}${staticHint}`);
+            addMessage('system', `API zwróciło błąd. Spróbuj ponownie lub użyj przycisku szybkiej akcji, by doprecyzować prośbę.${guidance}${staticHint}`);
+            sendBtn.disabled = false;
+            typingEl.style.display = 'none';
+            longRunEl.classList.remove('active');
+            return;
+          }
+
+          const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
+          addMessage('assistant', assistantMessage);
+        } catch (err) {
+          const aborted = err?.name === 'AbortError';
+          const hint = aborted ? 'Limit czasu (3 minuty) został przekroczony.' : 'Błąd połączenia z proxy/API.';
+          showToast(`${hint} Spróbuj ponownie lub skróć treść.`);
+          addMessage('system', `${hint} Możesz ponowić wysłanie, skrócić prompt albo użyć innego endpointu proxy.`);
+        } finally {
           sendBtn.disabled = false;
           typingEl.style.display = 'none';
           longRunEl.classList.remove('active');
-          return;
         }
-
-        const assistantMessage = data?.choices?.[0]?.message?.content || 'Brak odpowiedzi od modelu.';
-        addMessage('assistant', assistantMessage);
-      } catch (err) {
-        showToast('Błąd połączenia lub timeout. Spróbuj ponownie.');
-        addMessage('system', 'Połączenie zostało przerwane lub przekroczono limit czasu. Możesz ponowić wysłanie lub uzupełnić prompt.');
-      } finally {
-        sendBtn.disabled = false;
-        typingEl.style.display = 'none';
-        longRunEl.classList.remove('active');
       }
-    }
 
     function persistHistory() {
       try {
