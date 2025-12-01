@@ -1,0 +1,77 @@
+# --- HARDENING / ANTY-KOLIZJE ---
+# Wyłącz MultiViews (żeby Apache nie zgadywał rozszerzeń)
+Options -MultiViews
+
+# Domyślne pliki w katalogach
+DirectoryIndex index.html index.php
+
+# Włącz mod_rewrite
+RewriteEngine On
+
+# 0) MESSENGER NO-PREVIEW dla jednego linka: /dash_last
+RewriteCond %{REQUEST_URI} ^/dash_last/?$ [NC]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|facebot) [NC]
+RewriteRule ^ - [F,L]
+
+# 1) NIE dotykaj istniejących plików/folderów (CSS/JS/obrazki itd.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 2) KANONIKALIZACJA: .html /.php /.json  → wersja bez rozszerzenia (301)
+RewriteCond %{THE_REQUEST} \s/([^\s]+?)\.(html|php|json)([\s?])
+RewriteRule ^ %1 [R=301,L]
+
+# 3) PRETTY URLS: jeśli nie znaleziono pliku/katalogu,
+#    to sprawdź plik .html / .php / .json i serwuj go pod adresem bez rozszerzenia.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# .html
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# .php
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# .json
+RewriteCond %{REQUEST_FILENAME}.json -f
+RewriteRule ^(.+?)/?$ $1.json [L]
+
+# 4) ALICJE SEO (aliasy)
+RewriteRule ^oferta/?$ pages/oferta-strona.html [L]
+RewriteRule ^start/?$  landing/index.html      [L]
+RewriteRule ^cennik/?$ pages/cennik-2025.html  [L]
+
+# 4a) Ustaw nagłówki cache tylko dla fizycznego pliku prompts.json
+<IfModule mod_headers.c>
+  <If "%{REQUEST_FILENAME} =~ m#/(?:data/)?prompts\.json$#">
+    Header always set Cache-Control "no-store, must-revalidate"
+    Header always set Pragma "no-cache"
+    Header always unset ETag
+  </If>
+</IfModule>
+
+# 5) ŁADNE 404
+ErrorDocument 404 /404.html
+
+# USUŃ OGRANICZENIA DLA PHP
+<IfModule mod_php.c>
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value max_input_vars 10000
+    php_value post_max_size 128M
+    php_value upload_max_filesize 128M
+    php_value memory_limit 256M
+</IfModule>
+
+# OBSŁUŻ RÓŻNE METODY HTTP
+<Limit GET POST PUT DELETE HEAD OPTIONS>
+    Require all granted
+</Limit>
+
+# USUŃ WSZYSTKIE NAGŁÓWKI CORS Z .htaccess - PROXY SIĘ TYM ZAJMUJE
